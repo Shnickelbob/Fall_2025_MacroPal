@@ -26,7 +26,7 @@ Team details follow
 
 ### 294 Students
 
-294 Student(s) here
+Landon Hunter,
 
 ## Prerequisites
 
