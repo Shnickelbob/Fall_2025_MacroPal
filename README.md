@@ -1,39 +1,46 @@
 # Your Team Name Here
 
-This is the team repository for <your team name here>
+This is the team repository for Team 6
 
 ## Project
 
-Project details follow. 
 
 ### Project Name
-Your Project Name goes here
+MacroPal
 
 ### Project Description  
-Describe the problem solved and/or what the project is doing
+
+Web Application allowing individuals to track daily nutrition statistics in accordance with personal goals. Users can build upon the applications database by uploading foods and their nutritional data, as well as recipes and exercise routines, in order to log daily intakes and work towards customized goals.
 
 ## Team
 
-Team details follow
-
 ### 495 Students 
 
-495 student name here
+Emily Howell
+Chris Frederick
 
 ### 394 Students
 
-394 Student(s) here
+Joseph Allen
+Brian Schaeffer
 
 ### 294 Students
 
-Landon Hunter,
+Landon Hunter
+Donny Chambers
 
 ## Prerequisites
 
-List tech stack (including version if possible) on both backend and frondend (Database).
+## Tech Stack
+**MERN** (MongoDB, Express.js, React.js, Node.js)
+Frontend: React.js
+
+Backend: Node.js, Express.js
+
+Database: MongoDB
 
 ## Set Up and Installation
 
-Details on how to set up the project follow.
+TBD - check back shortly
 
 <put the details here>
