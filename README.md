@@ -56,17 +56,11 @@ Database: MongoDB
 
 3) Install dependencies from project JSON
 
-  # Backend
-  npm install
-  
-  # Frontend
-  npm install
+  Run the terminal command "npm install" without the quotes in both the frontend and backend
 
-4) Run
+4) Run MacroPal
 
-  # In one terminal (backend)
-  npm run dev
-  
-  # In another terminal (frontend)
-  npm run dev
-   
+  Run the termainl command "npm run dev" without the quotes in both the frontend and backend.
+  You will need separate terminals for this.
+  Browse to http://localhost:5000/api/health to make sure the back end is up and running.
+  Browse to http://localhost:5173 to get to the landing page.
