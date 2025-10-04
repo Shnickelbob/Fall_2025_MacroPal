@@ -45,6 +45,28 @@ Database: MongoDB
 
 ## Set Up and Installation
 
-TBD - check back shortly
+1) Install Node.js from https://nodejs.org/ 
 
-<put the details here>
+2) Update or create your .env variables in the backend using this structure.
+   Do not forget to remove the angle brackest in MONGODB_URI.
+   
+  PORT=5000
+  MONGODB_URI=mongodb+srv://<yourMongoUser>:<yourMongoPassword>@cluster0.ce3mxug.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+  CORS_ORIGIN=http://localhost:5173
+
+3) Install dependencies from project JSON
+
+  # Backend
+  npm install
+  
+  # Frontend
+  npm install
+
+4) Run
+
+  # In one terminal (backend)
+  npm run dev
+  
+  # In another terminal (frontend)
+  npm run dev
+   
