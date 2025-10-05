@@ -51,7 +51,9 @@ Database: MongoDB
    Do not forget to remove the angle brackest in MONGODB_URI.
    
   PORT=5000
-  MONGODB_URI=mongodb+srv://<yourMongoUser>:<yourMongoPassword>@cluster0.ce3mxug.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+  
+  MONGODB_URI=mongodb+srv://\<yourMongoUser\>:\<yourMongoPassword\>@cluster0.ce3mxug.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+  
   CORS_ORIGIN=http://localhost:5173
 
 3) Install dependencies from project JSON
