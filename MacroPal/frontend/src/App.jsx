@@ -1,12 +1,17 @@
-import './App.css'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import "./App.css";
+import LandingPage from "./Pages/LandingPage.jsx";
+import ModalTest from "./DemoPages/ModalTest.jsx";
 
 function App() {
   return (
-    <div className="App">
-      <h1>Macro Pal Begins</h1>
-      <p>Welcome to your simple nutrition tracker and adventure journal!</p>
-    </div>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/demo" element={<ModalTest />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App
