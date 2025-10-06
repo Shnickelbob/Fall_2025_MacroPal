@@ -45,6 +45,22 @@ Database: MongoDB
 
 ## Set Up and Installation
 
-TBD - check back shortly
+1) Install Node.js from https://nodejs.org/ 
 
-<put the details here>
+2) Update or create your .env variables in the backend using this structure.
+   Do not forget to remove the angle brackest in MONGODB_URI.
+   
+  PORT=5000
+  MONGODB_URI=mongodb+srv://<yourMongoUser>:<yourMongoPassword>@cluster0.ce3mxug.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+  CORS_ORIGIN=http://localhost:5173
+
+3) Install dependencies from project JSON
+
+  Run the terminal command "npm install" without the quotes in both the frontend and backend
+
+4) Run MacroPal
+
+  Run the termainl command "npm run dev" without the quotes in both the frontend and backend.
+  You will need separate terminals for this.
+  Browse to http://localhost:5000/api/health to make sure the back end is up and running.
+  Browse to http://localhost:5173 to get to the landing page.
