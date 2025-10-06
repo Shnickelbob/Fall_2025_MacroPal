@@ -1,5 +1,5 @@
 /** 
- * This model creates a recipe with three attributes (name, ingredient ids, and creator id)
+ *  This model creates a recipe with three attributes (name, ingredient ids, and creator id)
  * 
  * @author Brian Schaeffer
  * @version October 4, 2025
