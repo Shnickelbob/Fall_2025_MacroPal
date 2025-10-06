@@ -1,5 +1,5 @@
 /** 
- * this model creates a log with five attributes (foods ids, exercises ids, recipes ids, date, and user id)
+ * This model creates a log with five attributes (foods ids, exercises ids, recipes ids, date, and user id)
  * 
  * @author Brian Schaeffer
  * @version October 4, 2025

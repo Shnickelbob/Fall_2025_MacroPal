@@ -1,5 +1,5 @@
 /** 
- * this model creates a food with six attributes (name, calories, protein, fat, carbs, and tags)
+ * This model creates a food with six attributes (name, calories, protein, fat, carbs, and tags)
  * 
  * @author Brian Schaeffer
  * @version October 4, 2025

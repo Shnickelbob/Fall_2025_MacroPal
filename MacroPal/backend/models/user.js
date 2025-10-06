@@ -1,5 +1,5 @@
 /** 
- * This model creates a user with four attributes (email, screen name, password, and logS id)
+ *  This model creates a user with four attributes (email, screen name, password, and logS id)
  * 
  * @author Brian Schaeffer
  * @version October 4, 2025

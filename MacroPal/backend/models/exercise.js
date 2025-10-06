@@ -1,5 +1,5 @@
 /** 
- * this model creates an exercise with four attributes (name, calories burned, creator id, and description)
+ * This model creates an exercise with four attributes (name, calories burned, creator id, and description)
  * 
  * @author Brian Schaeffer
  * @version October 4, 2025
