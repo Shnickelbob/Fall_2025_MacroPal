@@ -48,7 +48,6 @@ app.post("/api/login", async (req, res) => {
   const {username, password} = req.body;
   const result = await user.verifyLogin(username, password);
   if(result){
-    console.log("test3");
     return res.send("Login Successful");
   }
   else{
