@@ -9,6 +9,7 @@ const userSchema = new Schema({
     password: String
 });
 const User = model("User", userSchema);
+
 const registerNewUser = async (user, pass) => {
     if(await User.findOne({username: user})){
         return false;
