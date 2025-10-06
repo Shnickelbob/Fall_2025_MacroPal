@@ -3,6 +3,7 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
+import * as user from "./user.js";
 
 dotenv.config();
 
@@ -25,6 +26,40 @@ app.get("/api/health", async (req, res) => {
     res.status(500).json({ status: "error", db: "not connected" });
   }
 });
+
+
+app.post("/api/register", async (req, res) => {
+  try{
+  const {username, password} = req.body;
+  if(await user.registerNewUser(username, password)){
+    return res.send(`User ${username} registered`);
+  }
+  else{
+    return res.send("Username already exists");
+  }}
+  catch(err){
+    console.error("Error in /api/register:", err);
+    res.status(500).send("Internal server error");
+  }
+});
+
+app.post("/api/login", async (req, res) => {
+  try{
+  const {username, password} = req.body;
+  const result = await user.verifyLogin(username, password);
+  if(result){
+    return res.send("Login Successful");
+  }
+  else{
+    console.log("test");
+    return res.send("Incorrect username or password");
+  }}
+  catch(err){
+    console.error("Error in /api/login:", err);
+    res.status(500).send("Internal server error");
+  }
+});
+
 
 // --- Connect to Mongo and start server
 async function start() {
