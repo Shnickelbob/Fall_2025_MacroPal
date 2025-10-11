@@ -71,5 +71,7 @@ const foodSchema = new mongoose.Schema({ // creates the food schema
 
 });
 
+foodSchema.index({ Name: 1 }, { unique: true, collation: { locale: "en", strength: 2 } }); //To prevent same case values (e.g. PB and pb)
+
 const Food = mongoose.model("Food", foodSchema); // makes a Food model
 export default Food; // lets other files use the food model

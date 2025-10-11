@@ -60,6 +60,28 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+import Food from "./models/food.js";
+
+// --- Food routes
+app.post("/api/foods", async (req, res) => {
+  try {
+    // Check for duplicate name (case-insensitive)
+    const found = await Food.findOne({ Name: req.body.Name })
+      .collation({ locale: "en", strength: 2 });
+
+    if (found) {
+      return res.status(409).json({ error: "Food already exists" });
+    }
+
+    // Create new food
+    const food = await Food.create(req.body);
+    res.status(201).json(food);
+  } catch (err) {
+    console.error("Error in /api/foods:", err.message);
+    res.status(400).json({ error: "Invalid data" });
+  }
+});
+
 
 // --- Connect to Mongo and start server
 async function start() {

@@ -5,8 +5,19 @@ import "../App.css";
 function ModalTest() {
   const [open, setOpen] = useState(false);
 
-  const handleSubmit = (data) => {
-    console.log("Submitted from ModalAddFood:", data);
+  const handleSubmit = async (data) => {
+    try {
+      const r = await fetch("/api/foods", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body.error || "Failed to create food");
+      alert(`Saved: ${body.Name}`);
+    } catch (e) {
+      alert(e.message);
+    }
   };
 
   return (
@@ -22,6 +33,15 @@ function ModalTest() {
         setOpen={setOpen}
         onSubmit={handleSubmit}
       />
+
+      <button
+        className="mp-btn"
+        style={{ position: "absolute", top: 20, left: 20 }}
+        onClick={() => window.history.back()}
+      >
+        ← Back
+      </button>
+
     </div>
   );
 }
