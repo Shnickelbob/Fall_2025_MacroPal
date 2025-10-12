@@ -2,7 +2,7 @@
  * This model creates a food with six attributes (name, calories, protein, fat, carbs, and tags)
  * 
  * @author Brian Schaeffer
- * @version October 4, 2025
+ * @version October 11, 2025
 */
 
 import mongoose from "mongoose"; // uses mongoose to build the schema and model
@@ -12,7 +12,7 @@ const foodSchema = new mongoose.Schema({ // creates the food schema
     Name: {
         type: String,
         required: true, // every food must have a name
-        unique: true, // no two food names can be the same
+        // unique: true, // no two food names can be the same
         trim: true, // trims extra spaces off the name
         minlength: 2, // food names must contain at least 2 letters (I would've made it 3 but technically Ox is valid and so are abbreviations like PB for peanut butter)
         maxlength: 120
@@ -70,6 +70,8 @@ const foodSchema = new mongoose.Schema({ // creates the food schema
     }],
 
 });
+
+foodSchema.index({ Name: 1 }, { unique: true, collation: { locale: "en", strength: 2 } }); //To prevent same case values (e.g. PB and pb)
 
 const Food = mongoose.model("Food", foodSchema); // makes a Food model
 export default Food; // lets other files use the food model

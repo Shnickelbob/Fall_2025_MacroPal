@@ -2,7 +2,7 @@
  * This model creates an exercise with four attributes (name, calories burned, creator id, and description)
  * 
  * @author Brian Schaeffer
- * @version October 4, 2025
+ * @version October 11, 2025
 */
 
 import mongoose from "mongoose"; // uses mongoose to build the schema and model
@@ -39,6 +39,12 @@ const exerciseSchema = new mongoose.Schema({ // creates the exercise schema
     },
 
 });
+
+// Queries are case-insensitive
+exerciseSchema.set('collation', { locale: 'en', strength: 2 });
+
+// Ensures Name is case-insensitive
+exerciseSchema.index({ Name: 1 }, { unique: true, collation: { locale: 'en', strength: 2 } });
 
 const Exercise = mongoose.model("Exercise", exerciseSchema); // makes a exercise model
 export default Exercise; // lets other files use the exercise model

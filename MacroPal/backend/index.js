@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import * as user from "./user.js";
+import searchRouter from "./routes/search.js";
 
 dotenv.config();
 
@@ -29,34 +30,60 @@ app.get("/api/health", async (req, res) => {
 
 
 app.post("/api/register", async (req, res) => {
-  try{
-  const {username, password} = req.body;
-  if(await user.registerNewUser(username, password)){
-    return res.send(`User ${username} registered`);
+  try {
+    const { username, password } = req.body;
+    if (await user.registerNewUser(username, password)) {
+      return res.send(`User ${username} registered`);
+    }
+    else {
+      return res.send("Username already exists");
+    }
   }
-  else{
-    return res.send("Username already exists");
-  }}
-  catch(err){
+  catch (err) {
     console.error("Error in /api/register:", err);
     res.status(500).send("Internal server error");
   }
 });
 
 app.post("/api/login", async (req, res) => {
-  try{
-  const {username, password} = req.body;
-  const result = await user.verifyLogin(username, password);
-  if(result){
-    return res.send("Login Successful");
+  try {
+    const { username, password } = req.body;
+    const result = await user.verifyLogin(username, password);
+    if (result) {
+      return res.send("Login Successful");
+    }
+    else {
+      console.log("test");
+      return res.send("Incorrect username or password");
+    }
   }
-  else{
-    console.log("test");
-    return res.send("Incorrect username or password");
-  }}
-  catch(err){
+  catch (err) {
     console.error("Error in /api/login:", err);
     res.status(500).send("Internal server error");
+  }
+});
+// Enables searching foods by name or tags
+app.use("/api/search", searchRouter);
+
+import Food from "./models/food.js";
+
+// --- Food routes
+app.post("/api/foods", async (req, res) => {
+  try {
+    // Check for duplicate name (case-insensitive)
+    const found = await Food.findOne({ Name: req.body.Name })
+      .collation({ locale: "en", strength: 2 });
+
+    if (found) {
+      return res.status(409).json({ error: "Food already exists" });
+    }
+
+    // Create new food
+    const food = await Food.create(req.body);
+    res.status(201).json(food);
+  } catch (err) {
+    console.error("Error in /api/foods:", err.message);
+    res.status(400).json({ error: "Invalid data" });
   }
 });
 

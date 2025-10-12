@@ -96,3 +96,65 @@ body, #root {
 .mp-input::placeholder {
   color: #ccc;
 }
+
+/* Menu */
+.burger {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  padding: .6em;
+}
+
+.burger div {
+  width: 20px;
+  height: 2px;
+  background: #222;
+}
+
+.menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-height: 100vh;
+  width: 250px;
+  background: #eee;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+}
+
+.menu.open {
+  transform: translateX(0);
+}
+
+.menu a {
+  padding: .2em 1.8em;
+  text-align: left;
+  color: #000;
+}
+
+.menu a:last-child {
+  margin-top: auto;
+  display: block; 
+  padding-bottom: 2em;  
+}
+
+nav.menu > a:first-of-type{
+  padding-top: 2em;
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: .2em 0.5em;
+}
