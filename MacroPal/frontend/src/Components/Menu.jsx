@@ -20,8 +20,8 @@ const Menu = ({ open, setOpen}) => (
             >
             &#x2715; 
             </button>
-            <a href="/">Homepage</a>
-            <a href="/">Search</a>
+            <a href="/homepage">Homepage</a>
+            <a href="/search">Search</a>
             <a href="/">Log out</a>
         </nav>
     </div>
