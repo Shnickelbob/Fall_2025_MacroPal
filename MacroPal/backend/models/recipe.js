@@ -2,7 +2,7 @@
  *  This model creates a recipe with three attributes (name, ingredient ids, and creator id)
  * 
  * @author Brian Schaeffer
- * @version October 4, 2025
+ * @version October 11, 2025
 */
 
 import mongoose from "mongoose"; // uses mongoose to build the schema and model
@@ -12,7 +12,7 @@ const recipeSchema = new mongoose.Schema({ // creates the schema for a recipe
     Name: {
         type: String,
         required: true, // every recipe must have a name
-        unique: true, // no two recipes should share the same name
+        // unique: true, // no two recipes should share the same name
         trim: true, // trailing and leading whitespaces are removed
         maxlength: 80 // puts a limit on how long the recipe name can be
     },
@@ -28,6 +28,12 @@ const recipeSchema = new mongoose.Schema({ // creates the schema for a recipe
     },
 
 });
+
+// Queries are case-insensitive
+recipeSchema.set('collation', { locale: 'en', strength: 2 });
+
+// Ensures Name is case-insensitive
+recipeSchema.index({ Name: 1 }, { unique: true, collation: { locale: 'en', strength: 2 } });
 
 const Recipe = mongoose.model("Recipe", recipeSchema); // makes a recipe model
 export default Recipe; // allows other files to use the recipe model
