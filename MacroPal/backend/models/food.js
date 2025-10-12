@@ -71,11 +71,7 @@ const foodSchema = new mongoose.Schema({ // creates the food schema
 
 });
 
-// Queries are case-insensitive
-foodSchema.set('collation', { locale: 'en', strength: 2 });
-
-// Ensures that Name is unique in a case-insensitive way
-foodSchema.index({ Name: 1 }, { unique: true, collation: { locale: 'en', strength: 2 } });
+foodSchema.index({ Name: 1 }, { unique: true, collation: { locale: "en", strength: 2 } }); //To prevent same case values (e.g. PB and pb)
 
 const Food = mongoose.model("Food", foodSchema); // makes a Food model
 export default Food; // lets other files use the food model
