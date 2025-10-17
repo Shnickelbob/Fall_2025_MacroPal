@@ -32,12 +32,70 @@ const userSchema = new mongoose.Schema({ // creates a schema for a user
         required: true,
     },
 
-    Logs_Ids: [
+    // Logs_Ids: [
+    //     {
+    //         type: mongoose.Schema.Types.ObjectId, // ObjectId points to the Log
+    //         ref: "Log", // linker
+    //     },
+    // ],
+
+    /* rather than log ids, have each user have 1 log:
+    This log will empty out at the beginning of each 24/hr period,
+    to be implemented later. For now, just a log to store that user's
+    logged food items.
+    */
+    Log: [
         {
-            type: mongoose.Schema.Types.ObjectId, // ObjectId points to the Log
-            ref: "Log", // linker
-        },
+            type:mongoose.Schema.Types.ObjectId,
+            ref: "Food", // Linker
+        }
     ],
+
+   // Following: a sequence of attributes for the goal values set by user:
+    Goal_Cals: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5000,
+        validate: {
+            validator: Number.isInteger,
+            message: "{VALUE} must be an integer"
+        }
+    },
+
+    Goal_Protein: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5000,
+        validate: {
+            validator: Number.isInteger,
+            message: "{VALUE} must be an integer"
+        }
+    },
+   
+    Goal_Fat: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5000,
+        validate: {
+            validator: Number.isInteger,
+            message: "{VALUE} must be an integer"
+        }
+    },
+
+    Goal_Carbs: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5000,
+        validate: {
+            validator: Number.isInteger,
+            message: "{VALUE} must be an integer"
+        }
+    },
+
 
 });
 
