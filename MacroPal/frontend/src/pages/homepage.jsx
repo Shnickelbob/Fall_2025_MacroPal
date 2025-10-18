@@ -20,7 +20,7 @@ function HomePage() {
   return (
     <div className="" style={{ padding: 24 }}>
 
-    // Menu component:
+    {/* // Menu component: */}
     <Menu 
     open={open} 
     setOpen={setOpen}
@@ -29,7 +29,7 @@ function HomePage() {
     <h2>Test Homepage</h2>
     <p>Adding menu and add food buttons for now</p>
 
-    // Add Food Button
+    {/* // Add Food Button */}
     <button
         className="mp-btn mp-btn-primary"
         style={{ position: "absolute", top: 20, right: 20 }}
