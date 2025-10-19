@@ -2,7 +2,8 @@
  *  This model creates a user with four attributes (email, screen name, password, and logS id)
  * 
  * @author Brian Schaeffer
- * @version October 4, 2025
+ * @contributors Joseph Allen
+ * @version October 19, 2025
 */
 
 import mongoose from "mongoose"; // uses mongoose to build the schema and model
@@ -95,9 +96,38 @@ const userSchema = new mongoose.Schema({ // creates a schema for a user
             message: "{VALUE} must be an integer"
         }
     },
-
-
 });
 
-const User = mongoose.model("User", userSchema); // creates a model called "User"
+// Make virtuals appear when sending JSON back to the client
+userSchema.set('toJSON', { virtuals: true });
+userSchema.set('toObject', { virtuals: true });
+
+// A convenient virtual that maps your Goal_* fields to a single "goals" object
+userSchema.virtual('goals')
+  .get(function () {
+    return {
+      cal: this.Goal_Cals ?? 0,
+      protein: this.Goal_Protein ?? 0,
+      carbs: this.Goal_Carbs ?? 0,
+      fat: this.Goal_Fat ?? 0,
+    };
+  })
+  .set(function (v) {
+    if (v == null || typeof v !== 'object') return;
+    if (v.cal != null) this.Goal_Cals = v.cal;
+    if (v.protein != null) this.Goal_Protein = v.protein;
+    if (v.carbs != null) this.Goal_Carbs = v.carbs;
+    if (v.fat != null) this.Goal_Fat = v.fat;
+  });
+
+// Small helper you can call from routes to update any subset of goals
+userSchema.methods.applyGoalPatch = function (patch = {}) {
+  if (patch.cal != null) this.Goal_Cals = patch.cal;
+  if (patch.protein != null) this.Goal_Protein = patch.protein;
+  if (patch.carbs != null) this.Goal_Carbs = patch.carbs;
+  if (patch.fat != null) this.Goal_Fat = patch.fat;
+  return this;
+};
+
+const User = mongoose.models.User || mongoose.model("User", userSchema); // creates a model called "User"
 export default User; // allows other files to use a User model

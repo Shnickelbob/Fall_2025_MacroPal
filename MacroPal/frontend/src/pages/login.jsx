@@ -63,15 +63,6 @@ function Login() {
       <button onClick={verifyLogin}>Login</button>
       <button onClick={registerNewUser}>Create an Account</button>
 
-      {/*---------This is temp for easy demo access----------*/}
-      <button
-        className="mp-btn mp-btn-primary"
-        style={{ position: "absolute", top: 20, right: 20 }}
-        onClick={() => window.location.href = "/demo"}
-      >
-        Add Food Demo
-      </button>
-
     </div>
   );
 }
