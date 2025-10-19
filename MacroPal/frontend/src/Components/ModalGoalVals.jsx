@@ -8,7 +8,7 @@
 import { useEffect, useRef, useState } from "react";
 import "../App.css";
 
-function ModalGoalVals({ open, setOpen, onSubmit }) {
+function ModalGoalVals({ open, setOpen, onSubmit, initialGoals }) {
   const [calories, setCalories] = useState("");
   const [protein, setProtein] = useState("");
   const [fat, setFat] = useState("");
@@ -17,10 +17,16 @@ function ModalGoalVals({ open, setOpen, onSubmit }) {
 
   useEffect(() => {
     if (!open) return;
+    if (initialGoals) {
+      setCalories(String(initialGoals.cal ?? ""));
+      setProtein(String(initialGoals.protein ?? ""));
+      setFat(String(initialGoals.fat ?? ""));
+      setCarbs(String(initialGoals.carbs ?? ""));
+    }
     const handleKey = (e) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [open, setOpen]);
+  }, [open, setOpen, initialGoals]);
 
   if (!open) return null;
 
@@ -34,35 +40,42 @@ function ModalGoalVals({ open, setOpen, onSubmit }) {
     return Number.isFinite(n) ? n : def;
   };
 
-  const handleSubmit = () => {
-    const cal = toInt(calories, NaN);
-    if (!Number.isInteger(cal) || cal < 0 || cal > 5000)
-      return alert("Calories must be an integer between 0 and 5000.");
-    const pro = toInt(protein, 0);
-    const fa = toInt(fat, 0);
-    const ca = toInt(carbs, 0);
-    for (const [label, val] of [
-      ["Protein", pro],
-      ["Fat", fa],
-      ["Carbohydrates", ca],
-    ]) {
-      if (!Number.isInteger(val) || val < 0 || val > 5000)
-        return alert(`${label} must be an integer between 0 and 5000.`);
+  const handleSubmit = async () => {
+    const patch = {};
+
+    const addIfChanged = (key, value, label) => {
+      if (value === "") return; // don’t update if blank
+      const n = Math.trunc(Number(value));
+      if (!Number.isInteger(n) || n < 0 || n > 5000) {
+        alert(`${label} must be an integer between 0 and 5000.`);
+        throw new Error("Validation failed");
+      }
+      patch[key] = n;
+    };
+
+    try {
+      addIfChanged("cal", calories, "Calories");
+      addIfChanged("protein", protein, "Protein");
+      addIfChanged("fat", fat, "Fat");
+      addIfChanged("carbs", carbs, "Carbohydrates");
+
+      if (Object.keys(patch).length === 0) {
+        setOpen(false);
+        return;
+      }
+
+      await onSubmit?.(patch);
+
+      setCalories("");
+      setProtein("");
+      setFat("");
+      setCarbs("");
+      setOpen(false);
+    } catch (e) {
+      console.error(e);
     }
-
-    onSubmit?.({
-      Calories: cal,
-      Protein: pro,
-      Fat: fa,
-      Carbs: ca,
-    });
-
-    setCalories("");
-    setProtein("");
-    setFat("");
-    setCarbs("");
-    setOpen(false);
   };
+
 
   return (
     <div
@@ -126,10 +139,10 @@ function ModalGoalVals({ open, setOpen, onSubmit }) {
               min="0"
               max="5000"
               step="1"
-              placeholder="Fat (g)"
-              value={fat}
+              placeholder="Carbohydrates (g)"
+              value={carbs}
               onKeyDown={blockNonInt}
-              onChange={(e) => setFat(onlyDigits(e.target.value))}
+              onChange={(e) => setCarbs(onlyDigits(e.target.value))}
             />
 
             <input
@@ -139,11 +152,12 @@ function ModalGoalVals({ open, setOpen, onSubmit }) {
               min="0"
               max="5000"
               step="1"
-              placeholder="Carbohydrates (g)"
-              value={carbs}
+              placeholder="Fat (g)"
+              value={fat}
               onKeyDown={blockNonInt}
-              onChange={(e) => setCarbs(onlyDigits(e.target.value))}
+              onChange={(e) => setFat(onlyDigits(e.target.value))}
             />
+
           </div>
         </div>
 

@@ -6,13 +6,13 @@ const ProgressBar = ({label,bgcolor,height,part,total}) => {
         width: '100%',
         minWidth: '250px',
         maxWidth: '500px',
-        color: 'black',
+        color: 'white',
         textAlign: 'left'
       }
 
     const goalStatus = {
         width: '100%',
-        color: 'black',
+        color: 'white',
         textAlign: 'right'
       }
 

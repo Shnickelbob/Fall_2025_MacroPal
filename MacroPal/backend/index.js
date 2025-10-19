@@ -1,12 +1,13 @@
 // backend/index.js
+import 'dotenv/config';
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import * as user from "./user.js";
 import searchRouter from "./routes/search.js";
-
-dotenv.config();
+import userRoutes from "./routes/user.js";
+import logRoutes from "./routes/log.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -64,6 +65,8 @@ app.post("/api/login", async (req, res) => {
 });
 // Enables searching foods by name or tags
 app.use("/api/search", searchRouter);
+app.use("/api/user", userRoutes);
+app.use("/api/log", logRoutes);
 
 import Food from "./models/food.js";
 

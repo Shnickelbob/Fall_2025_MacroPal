@@ -1,0 +1,100 @@
+/** 
+ * This route handles per-user, per-day food logging:
+ *  - POST   /api/log        -> add a food to today's log
+ *  - GET    /api/log/today  -> fetch today's entries + totals + goals
+ *  - DELETE /api/log/:id    -> remove a logged item
+ * Uses TEST_USER_ID until login/session is ready.
+ * 
+ * @author Joseph Allen
+ * @contributors 
+ * @version October 19, 2025
+ */
+
+import express from "express";
+import LogEntry from "../models/LogEntry.js";
+import User from "../models/user.js";
+import dateKey from "../utils/dateKey.js";
+
+const router = express.Router();
+
+const TEST_USER_ID = process.env.TEST_USER_ID;
+const getUserId = (req) => req.user?.id || TEST_USER_ID;
+
+// POST /api/log  -> add a food to today's log
+router.post("/", async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    if (!userId)
+      return res.status(400).json({ error: "No userId (login not ready and TEST_USER_ID missing)" });
+
+    const key = dateKey();
+    const { foodId, name, cal, protein, carbs, fat, qty = 1 } = req.body;
+
+    const doc = await LogEntry.create({
+      userId, dateKey: key, foodId, name, cal, protein, carbs, fat, qty,
+    });
+
+    res.status(201).json(doc);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// GET /api/log/today -> entries + totals + goals + remaining
+router.get("/today", async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    if (!userId)
+      return res.status(400).json({ error: "No userId (login not ready and TEST_USER_ID missing)" });
+
+    const key = dateKey();
+
+    const [entries, user] = await Promise.all([
+      LogEntry.find({ userId, dateKey: key }).sort({ createdAt: -1 }),
+      User.findById(userId).lean(),
+    ]);
+
+    const totals = entries.reduce(
+      (a, x) => ({
+        cal: a.cal + ((x.cal || 0) * (x.qty || 1)),
+        protein: a.protein + ((x.protein || 0) * (x.qty || 1)),
+        carbs: a.carbs + ((x.carbs || 0) * (x.qty || 1)),
+        fat: a.fat + ((x.fat || 0) * (x.qty || 1)),
+      }),
+      { cal: 0, protein: 0, carbs: 0, fat: 0 }
+    );
+
+    const goals = {
+      cal: user?.Goal_Cals ?? 0,
+      protein: user?.Goal_Protein ?? 0,
+      carbs: user?.Goal_Carbs ?? 0,
+      fat: user?.Goal_Fat ?? 0,
+    };
+
+    const remaining = {
+      cal: Math.max(goals.cal - totals.cal, 0),
+      protein: Math.max(goals.protein - totals.protein, 0),
+      carbs: Math.max(goals.carbs - totals.carbs, 0),
+      fat: Math.max(goals.fat - totals.fat, 0),
+    };
+
+    res.json({ dateKey: key, entries, totals, goals, remaining });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// DELETE /api/log/:id -> remove one logged item
+router.delete("/:id", async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(400).json({ error: "No userId" });
+
+    await LogEntry.deleteOne({ _id: req.params.id, userId });
+    res.status(204).end();
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+export default router;
