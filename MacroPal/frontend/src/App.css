@@ -76,6 +76,16 @@ body, #root {
   border: none;
 }
 
+.mp-btn-homepage {
+  padding: 8px 9px 6px 9px;
+  border-radius: 8px;
+  border: 1px solid #DDD;
+  background: #DDD;
+  cursor: pointer;
+  color: #121212;
+  font-size: 1.3em;
+}
+
 /* Modal input layout */
 .mp-form {
   display: flex;
