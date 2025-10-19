@@ -21,6 +21,22 @@ import ProgressBar from "../Components/ProgressBar";
 function HomePage() {
   const [open, setOpen] = useState(false); // for menu
 
+  // for the add food modal:
+    const handleSubmit = async (data) => {
+    try {
+      const r = await fetch("/api/foods", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body.error || "Failed to create food");
+      alert(`Saved: ${body.Name}`);
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
   return (
     <div className="" style={{ }}>
 
@@ -69,7 +85,7 @@ function HomePage() {
         title="Edit goals"
         className="mp-btn-homepage"
         style={{ position: "absolute", top: 20, right: 20 }}
-        onClick={() => window.location.href = "/demo"}
+        onClick={() => window.location.href = "/goaldemo"}
         >
         <BsPencilFill />
     </button>
@@ -81,6 +97,7 @@ function HomePage() {
         >
         <FaPlus />
     </button>
+
     <button
         title="Search for food items"
         className="mp-btn-homepage"
