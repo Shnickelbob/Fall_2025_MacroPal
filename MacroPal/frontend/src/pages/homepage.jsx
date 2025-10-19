@@ -69,6 +69,15 @@ function HomePage() {
       .then((data) => mounted && setToday(data))
       .catch((e) => mounted && setErr(e.message));
     return () => { mounted = false; };
+    }, []);
+
+  const [user, setUser] = useState("");
+  useEffect(() => {
+    // grab stored username
+    const storedUser = localStorage.getItem("username");
+    if (storedUser) {
+      setUser(storedUser);
+    }
   }, []);
 
   return (
@@ -80,7 +89,7 @@ function HomePage() {
     setOpen={setOpen}
     />
 
-    <h2>USER'S Daily Goals</h2>
+    <h2>{ user }'S Daily Goals</h2>
     <p>Progress bars for visual indications</p>
 
     <ProgressBar
