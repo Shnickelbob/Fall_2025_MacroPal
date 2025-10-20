@@ -23,7 +23,7 @@ const ProgressBar = ({label,bgcolor,height,part,total}) => {
         borderRadius: 5,
         margin: 0
       }
-      const progress2 = total > 0 ? (part / total) * 100 : 0;
+      const progress2 = total > 0 ? Math.min((part / total) * 100, 100) : 0;
     
       const innerDiv = {
         height: '100%',

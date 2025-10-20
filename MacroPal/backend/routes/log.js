@@ -3,7 +3,6 @@
  *  - POST   /api/log        -> add a food to today's log
  *  - GET    /api/log/today  -> fetch today's entries + totals + goals
  *  - DELETE /api/log/:id    -> remove a logged item
- * Uses TEST_USER_ID until login/session is ready.
  * 
  * @author Joseph Allen
  * @contributors 
@@ -17,15 +16,13 @@ import dateKey from "../utils/dateKey.js";
 
 const router = express.Router();
 
-const TEST_USER_ID = process.env.TEST_USER_ID;
-const getUserId = (req) => req.user?.id || TEST_USER_ID;
+const getUserId = (req) => req.session?.userId || null;
 
 // POST /api/log  -> add a food to today's log
 router.post("/", async (req, res) => {
   try {
     const userId = getUserId(req);
-    if (!userId)
-      return res.status(400).json({ error: "No userId (login not ready and TEST_USER_ID missing)" });
+    if (!userId) return res.status(401).json({ error: "Not logged in" });
 
     const key = dateKey();
     const { foodId, name, cal, protein, carbs, fat, qty = 1 } = req.body;
@@ -44,8 +41,7 @@ router.post("/", async (req, res) => {
 router.get("/today", async (req, res) => {
   try {
     const userId = getUserId(req);
-    if (!userId)
-      return res.status(400).json({ error: "No userId (login not ready and TEST_USER_ID missing)" });
+    if (!userId) return res.status(401).json({ error: "Not logged in" });
 
     const key = dateKey();
 
@@ -88,7 +84,7 @@ router.get("/today", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const userId = getUserId(req);
-    if (!userId) return res.status(400).json({ error: "No userId" });
+    if (!userId) return res.status(401).json({ error: "Not logged in" });
 
     await LogEntry.deleteOne({ _id: req.params.id, userId });
     res.status(204).end();
