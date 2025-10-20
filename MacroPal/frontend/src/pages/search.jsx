@@ -61,6 +61,33 @@ export default function Search() {
         if (event.key === 'Enter') runSearch();
     }
 
+async function handleLogFood(food) {
+  const payload = {
+    name: food.name ?? food.Name ?? "Unnamed",
+    cal: food.calories ?? food.Calories ?? 0,
+    protein: food.protein ?? food.Protein ?? 0,
+    carbs: food.carbs ?? food.Carbs ?? 0,
+    fat: food.fat ?? food.Fat ?? 0,
+    qty: 1,
+  };
+
+  try {
+    const res = await fetch("http://localhost:5000/api/log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error || "Failed to log food");
+    }
+    alert(`${payload.name} added to today's log!`);
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
     return (
         <div style={{ maxWidth: 760, margin: '24px auto', padding: '0 16px' }}>
             {/* Slow rainbow animation for the title */}
@@ -177,7 +204,7 @@ export default function Search() {
                                 {/* Placeholder Log button for future feature */}
                                 <button
                                     type="button"
-                                    onClick={() => alert("Coming Soon!")}
+                                    onClick={() => handleLogFood(foodItem)}
                                     aria-label="Log (coming soon)"
                                     style={{
                                         padding: '6px 10px',
