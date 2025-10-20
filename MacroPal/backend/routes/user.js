@@ -1,7 +1,6 @@
 /** 
  * This route handles user-related endpoints such as retrieving
  * and updating a user's daily goal values.
- * Uses TEST_USER_ID temporarily until login is functional.
  * 
  * @author Joseph Allen
  * @version October 19, 2025
@@ -12,16 +11,13 @@ import User from "../models/user.js";
 
 const router = express.Router();
 
-// temporary fallback until login/session is finished
-const TEST_USER_ID = process.env.TEST_USER_ID; 
-const getUserId = (req) => req.user?.id || TEST_USER_ID;
+const getUserId = (req) => req.session?.userId || null;
 
 // --- GET current user's goal values ---
 router.get("/goals", async (req, res) => {
   try {
     const userId = getUserId(req);
-    if (!userId)
-      return res.status(400).json({ error: "No userId (login not ready and TEST_USER_ID missing)" });
+    if (!userId) return res.status(401).json({ error: "Not logged in" });
 
     const user = await User.findById(userId).lean();
     if (!user) return res.status(404).json({ error: "User not found" });
@@ -42,8 +38,8 @@ router.get("/goals", async (req, res) => {
 // --- PATCH update one or more goal values ---
 router.patch("/goals", async (req, res) => {
   try {
-    const userId = req.user?.id || process.env.TEST_USER_ID;
-    if (!userId) return res.status(400).json({ error: "No userId (login not ready and TEST_USER_ID missing)" });
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ error: "Not logged in" });
 
     const { cal, protein, carbs, fat } = req.body;
 

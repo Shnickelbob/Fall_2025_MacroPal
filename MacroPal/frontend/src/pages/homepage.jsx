@@ -46,6 +46,7 @@ function HomePage() {
       const r = await fetch("/api/user/goals", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        credentials:"include",
         body: JSON.stringify(patch), // expects { cal, protein, carbs, fat }
       });
       const body = await r.json().catch(() => ({}));
@@ -89,7 +90,7 @@ function HomePage() {
     setOpen={setOpen}
     />
 
-    <h2>{ user }'S Daily Goals</h2>
+    <h2>{ user }'s Daily Goals</h2>
     <p>Progress bars for visual indications</p>
 
     <ProgressBar

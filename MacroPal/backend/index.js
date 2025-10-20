@@ -8,14 +8,39 @@ import * as user from "./user.js";
 import searchRouter from "./routes/search.js";
 import userRoutes from "./routes/user.js";
 import logRoutes from "./routes/log.js";
+import session from "express-session";
+import MongoStore from "connect-mongo";
+import User from "./models/user.js";
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGODB_URI;
 
 // --- Middleware
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true
+}));
 app.use(express.json());
+
+app.use(session({
+  name: "mp.sid",
+  secret: process.env.SESSION_SECRET || "dev-secret-change-me",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false,                    // true only if serving over HTTPS
+    maxAge: 1000 * 60 * 60 * 24 * 7,  // 7 days user will auto logout
+  },
+  store: MongoStore.create({
+    mongoUrl: MONGO_URI,
+    dbName: process.env.DB_NAME || undefined,
+    ttl: 60 * 60 * 24 * 7,
+  }),
+}));
 
 // --- Simple route
 app.get("/api/health", async (req, res) => {
@@ -49,20 +74,26 @@ app.post("/api/register", async (req, res) => {
 app.post("/api/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-    const result = await user.verifyLogin(username, password);
-    if (result) {
-      return res.send("Login Successful");
-    }
-    else {
-      console.log("test");
-      return res.send("Incorrect username or password");
-    }
-  }
-  catch (err) {
+
+    const ok = await user.verifyLogin(username, password);
+    if (!ok) return res.status(401).send("Incorrect username or password");
+
+    const AuthUser = mongoose.model("AuthUser");
+    const doc = await AuthUser.findOne({ username }).lean();
+    if (!doc?._id) return res.status(404).send("User not found");
+
+    req.session.userId = String(doc._id);
+
+    res.json({ message: "Login Successful", username: doc.username });
+  } catch (err) {
     console.error("Error in /api/login:", err);
     res.status(500).send("Internal server error");
   }
 });
+
+
+
+
 // Enables searching foods by name or tags
 app.use("/api/search", searchRouter);
 app.use("/api/user", userRoutes);

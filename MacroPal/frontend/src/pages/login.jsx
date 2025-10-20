@@ -126,26 +126,29 @@ function Login() {
   const [password, setPassword] = useState("");
   const [openRegister, setOpenRegister] = useState(false);
 
-  const verifyLogin = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-      const result = await response.text();
-      if (result === "Login Successful") {
-        console.log("Login Successful");
-        localStorage.setItem("username", username);
-        navigate("/homepage");
-      } else {
-        alert("Incorrect username or password");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Unable to reach server. Please try again.");
+const verifyLogin = async () => {
+  try {
+    const response = await fetch("http://localhost:5000/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",                 // <-- send/receive cookie
+      body: JSON.stringify({ username, password }),
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    if (response.ok && result?.message === "Login Successful") {
+      localStorage.setItem("username", result.username ?? username);
+      navigate("/homepage");
+    } else {
+      alert("Incorrect username or password");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Unable to reach server. Please try again.");
+  }
+};
+
 
   // Simple centered column layout using your theme classes;
   // no new CSS required beyond your existing .mp-* rules.
@@ -244,15 +247,6 @@ function Login() {
           </div>
         </div>
       </div>
-
-      {/* Demo Food Button */}
-      <button
-        className="mp-btn mp-btn-primary"
-        style={{ position: "fixed", bottom: 20, right: 20 }}
-        onClick={() => (window.location.href = "/demo")}
-      >
-        Add Food Demo
-      </button>
 
       {/* Register modal with same CSS stylings as your ModalAddFood */}
       <RegisterModal
