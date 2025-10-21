@@ -1,0 +1,243 @@
+/**
+ * Styles the Daily Log page to match the Search page look
+ * Dark UI, rounded pills, soft borders/hover states
+ *
+ * @author Brian Schaeffer
+ * @version October 19, 2025
+ */
+
+/* Page container */
+.log-container {
+    max-width: 620px;
+    /* tighter column (was 1000px) */
+    margin: 24px auto;
+    padding: 0 12px;
+    /* slightly tighter side padding */
+}
+
+@keyframes hueShift {
+    0% {
+        filter: hue-rotate(0deg);
+    }
+
+    100% {
+        filter: hue-rotate(360deg);
+    }
+}
+
+.hue-anim {
+    animation: hueShift 16s linear infinite;
+}
+
+/* Title block (same classes as search.css so it matches) */
+.intro {
+    margin: 56px auto 20px;
+    text-align: center;
+}
+
+.intro-title {
+    margin: 12px 0 8px;
+    font-weight: 800;
+    line-height: 1.1;
+    font-size: clamp(28px, 6vw, 56px);
+}
+
+.intro-accent {
+    background: linear-gradient(90deg, #8ab4ff, #b388ff 60%, #ffd4a3);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.intro-subtitle {
+    margin: 0 auto;
+    max-width: 680px;
+    color: #b7b7b7;
+    font-size: 15px;
+}
+
+.intro-divider {
+    height: 1px;
+    margin: 24px auto 8px;
+    width: min(92%, 900px);
+    background: linear-gradient(90deg, transparent, #2a2a2a, transparent);
+    border-radius: 999px;
+}
+
+/* List of items */
+.log-list {
+    display: grid;
+    gap: 8px;
+    /* tighter stack */
+}
+
+/* Each item pill (matches search aesthetics) */
+.log-card {
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 16px;
+    padding: 8px 12px;
+    /* tighter horizontal padding */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* center text + button as a group */
+    gap: 16px;
+    /* space between text block & button */
+    transition: background .15s ease, border-color .15s ease, transform .02s ease;
+}
+
+.log-card:hover {
+    background: #262626;
+    border-color: #353535;
+}
+
+.log-card:active {
+    transform: translateY(1px);
+}
+
+/* center the text within the left block */
+.log-card>div {
+    text-align: center;
+}
+
+.log-name {
+    font-weight: 600;
+    color: #f3f3f3;
+}
+
+.log-stats {
+    font-size: 14px;
+    color: #e0e0e0;
+    opacity: .9;
+}
+
+/* Remove button styled like search button */
+.log-remove {
+    height: 34px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #f3f3f3;
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, transform .02s ease;
+}
+
+.log-remove:hover {
+    background: #262626;
+    border-color: #353535;
+}
+
+.log-remove:active {
+    transform: translateY(1px);
+}
+
+/* --- Daily Summary pill (above the list) --- */
+.log-summary {
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 16px;
+    padding: 16px;
+    margin: 14px 0 18px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, .18);
+}
+
+.log-summary-title {
+    font-weight: 700;
+    color: #f3f3f3;
+    margin-bottom: 12px;
+    font-size: 16px;
+    letter-spacing: .2px;
+    text-decoration: underline;
+    /* chosen option */
+}
+
+.log-summary-rows {
+    display: grid;
+    gap: 6px;
+    color: #eaeaea;
+    font-size: 14px;
+}
+
+.log-summary-rows b {
+    color: #ffffff;
+}
+
+/* Empty state */
+.empty-state {
+    margin-top: 12px;
+    text-align: center;
+    color: #eaeaea;
+}
+
+.empty-title {
+    font-size: 18px;
+    margin-bottom: 12px;
+}
+
+.empty-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Buttons that match your dark pill aesthetic */
+.pill-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 12px;
+    background: #161616;
+    color: #f3f3f3;
+    border: 1px solid #2a2a2a;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background .15s ease, border-color .15s ease, transform .02s ease;
+}
+
+.pill-btn:hover {
+    background: #262626;
+    border-color: #353535;
+}
+
+.pill-btn:active {
+    transform: translateY(1px);
+}
+
+.pill-btn.ghost {
+    background: transparent;
+    color: #d4d4d4;
+}
+
+/* Floating action area (bottom-left) */
+.log-fab-left {
+    position: fixed;
+    left: 20px;
+    bottom: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 1000;
+    /* above content */
+}
+
+/* Small-screen tweak */
+@media (max-width: 480px) {
+    .log-fab-left {
+        left: 12px;
+        bottom: 12px;
+    }
+
+    .log-fab-left .pill-btn {
+        height: 36px;
+        padding: 0 14px;
+        border-radius: 10px;
+    }
+}

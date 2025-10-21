@@ -7,9 +7,10 @@ import Search from "./pages/search.jsx";
 import HomePage from "./pages/homepage.jsx";
 import GoalValsTest from "./DemoPages/GoalValsTest.jsx";
 import { useState } from 'react'
+import DailyLog from "./pages/log.jsx";
 
 function App() {
- 
+
   return (
     <BrowserRouter>
       <Routes>
@@ -17,8 +18,9 @@ function App() {
         <Route path="/demo" element={<ModalTest />} />
         <Route path="/menu" element={<MenuTest />} />
         <Route path="/search" element={<Search />} />
-        <Route path="/homepage" element={<HomePage/>} />
-        <Route path="/goaldemo" element={<GoalValsTest/>} />
+        <Route path="/homepage" element={<HomePage />} />
+        <Route path="/goaldemo" element={<GoalValsTest />} />
+        <Route path="/log" element={<DailyLog />} />
       </Routes>
     </BrowserRouter>
   );

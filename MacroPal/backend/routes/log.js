@@ -17,15 +17,11 @@ import dateKey from "../utils/dateKey.js";
 
 const router = express.Router();
 
-const TEST_USER_ID = process.env.TEST_USER_ID;
-const getUserId = (req) => req.user?.id || TEST_USER_ID;
-
-// POST /api/log  -> add a food to today's log
+// POST /api/log -> add a food to today's log
 router.post("/", async (req, res) => {
   try {
-    const userId = getUserId(req);
-    if (!userId)
-      return res.status(400).json({ error: "No userId (login not ready and TEST_USER_ID missing)" });
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
     const key = dateKey();
     const { foodId, name, cal, protein, carbs, fat, qty = 1 } = req.body;
@@ -43,9 +39,8 @@ router.post("/", async (req, res) => {
 // GET /api/log/today -> entries + totals + goals + remaining
 router.get("/today", async (req, res) => {
   try {
-    const userId = getUserId(req);
-    if (!userId)
-      return res.status(400).json({ error: "No userId (login not ready and TEST_USER_ID missing)" });
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
     const key = dateKey();
 
@@ -87,8 +82,8 @@ router.get("/today", async (req, res) => {
 // DELETE /api/log/:id -> remove one logged item
 router.delete("/:id", async (req, res) => {
   try {
-    const userId = getUserId(req);
-    if (!userId) return res.status(400).json({ error: "No userId" });
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
     await LogEntry.deleteOne({ _id: req.params.id, userId });
     res.status(204).end();

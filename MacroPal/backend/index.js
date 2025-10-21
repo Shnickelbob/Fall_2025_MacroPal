@@ -1,26 +1,44 @@
 // backend/index.js
-import 'dotenv/config';
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
-import * as user from "./user.js";
+
+import * as user from "./user.js";            // temp auth helpers (register/login)
 import searchRouter from "./routes/search.js";
+import logRouter from "./routes/log.js";
 import userRoutes from "./routes/user.js";
-import logRoutes from "./routes/log.js";
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGODB_URI;
 
-// --- Middleware
+// --- Core middleware
 app.use(cors());
 app.use(express.json());
 
-// --- Simple route
-app.get("/api/health", async (req, res) => {
+// Debug logger so you can see what hits the backend
+app.use((req, _res, next) => {
+  console.log(`[backend] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
+/** Require a logged-in user for protected APIs.
+ *  Frontend sets localStorage.mp_user_id after login and sends it
+ *  as the "x-user-id" header on every request.
+ */
+function requireUser(req, res, next) {
+  const id = req.header("x-user-id");
+  if (!id) return res.status(401).json({ error: "Missing x-user-id header" });
+  req.user = { id };
+  next();
+}
+
+// --- Health (public)
+app.get("/api/health", async (_req, res) => {
   try {
-    // run a lightweight ping
     await mongoose.connection.db.admin().ping();
     res.json({ status: "ok", db: "connected", time: new Date().toISOString() });
   } catch (err) {
@@ -29,18 +47,15 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
-
+// --- Auth (public)
 app.post("/api/register", async (req, res) => {
   try {
     const { username, password } = req.body;
     if (await user.registerNewUser(username, password)) {
       return res.send(`User ${username} registered`);
     }
-    else {
-      return res.send("Username already exists");
-    }
-  }
-  catch (err) {
+    return res.send("Username already exists");
+  } catch (err) {
     console.error("Error in /api/register:", err);
     res.status(500).send("Internal server error");
   }
@@ -49,39 +64,37 @@ app.post("/api/register", async (req, res) => {
 app.post("/api/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-    const result = await user.verifyLogin(username, password);
-    if (result) {
-      return res.send("Login Successful");
+    const doc = await user.verifyLogin(username, password);
+    if (!doc) {
+      return res.status(401).json({ ok: false, error: "Incorrect username or password" });
     }
-    else {
-      console.log("test");
-      return res.send("Incorrect username or password");
-    }
-  }
-  catch (err) {
+    return res.json({
+      ok: true,
+      userId: String(doc._id),
+      screenName: doc.ScreenName || doc.username || "User",
+    });
+  } catch (err) {
     console.error("Error in /api/login:", err);
-    res.status(500).send("Internal server error");
+    res.status(500).json({ ok: false, error: "Internal server error" });
   }
 });
-// Enables searching foods by name or tags
+
+// --- Routers
+// Public routes
 app.use("/api/search", searchRouter);
-app.use("/api/user", userRoutes);
-app.use("/api/log", logRoutes);
 
+// Protected routes (must include x-user-id)
+app.use("/api/user", requireUser, userRoutes);
+app.use("/api/log", requireUser, logRouter);
+console.log("[index.js] mounted /api/user and /api/log as protected");
+
+// Example food creation (left public as before)
 import Food from "./models/food.js";
-
-// --- Food routes
 app.post("/api/foods", async (req, res) => {
   try {
-    // Check for duplicate name (case-insensitive)
     const found = await Food.findOne({ Name: req.body.Name })
       .collation({ locale: "en", strength: 2 });
-
-    if (found) {
-      return res.status(409).json({ error: "Food already exists" });
-    }
-
-    // Create new food
+    if (found) return res.status(409).json({ error: "Food already exists" });
     const food = await Food.create(req.body);
     res.status(201).json(food);
   } catch (err) {
@@ -90,27 +103,18 @@ app.post("/api/foods", async (req, res) => {
   }
 });
 
-
-// --- Connect to Mongo and start server
+// --- Mongo start
 async function start() {
   try {
-    if (!MONGO_URI) {
-      throw new Error("MONGODB_URI missing in .env");
-    }
-
-    await mongoose.connect(MONGO_URI, {
-      dbName: process.env.DB_NAME || undefined,
-    });
-
+    if (!MONGO_URI) throw new Error("MONGODB_URI missing in .env");
+    await mongoose.connect(MONGO_URI, { dbName: process.env.DB_NAME || undefined });
     console.log("MongoDB connected");
-
-    app.listen(PORT, () => {
-      console.log(`MacroPal backend running at http://localhost:${PORT}`);
-    });
+    app.listen(PORT, () =>
+      console.log(`MacroPal backend running at http://localhost:${PORT}`)
+    );
   } catch (err) {
     console.error("Failed to connect to MongoDB:", err.message);
     process.exit(1);
   }
 }
-
 start();

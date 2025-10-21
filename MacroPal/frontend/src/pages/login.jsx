@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../App.css";
 
-
-
 /** ------- Register Modal (uses same pattern as ModalAddFood) ------- */
 function RegisterModal({ open, setOpen, onRegistered }) {
   const [regUsername, setRegUsername] = useState("");
@@ -121,7 +119,6 @@ function RegisterModal({ open, setOpen, onRegistered }) {
 /** -------------------- Login Page -------------------- */
 function Login() {
   const navigate = useNavigate();
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [openRegister, setOpenRegister] = useState(false);
@@ -133,14 +130,17 @@ function Login() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-      const result = await response.text();
-      if (result === "Login Successful") {
-        console.log("Login Successful");
-        localStorage.setItem("username", username);
-        navigate("/homepage");
-      } else {
-        alert("Incorrect username or password");
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok || !data?.ok) {
+        alert(data?.error || "Incorrect username or password");
+        return;
       }
+      // Save user info for later requests/pages
+      localStorage.setItem("mp_user_id", data.userId);
+      localStorage.setItem("mp_screen_name", data.screenName || username);
+
+      navigate("/homepage");
     } catch (err) {
       console.error(err);
       alert("Unable to reach server. Please try again.");
@@ -193,18 +193,18 @@ function Login() {
 
             {/* Title and description */}
             <div className="intro">
-                <h1
-                    className="intro-title intro-accent hue-anim"
-                    style={{
-                        backgroundImage: 'linear-gradient(90deg,#7aa2ff,#b38bff,#ff9fb3)',
-                        WebkitBackgroundClip: 'text',
-                        backgroundClip: 'text',
-                        color: 'transparent'
-                    }}
-                >
-                    MacroPal
-                </h1>
-                <p className="intro-subtitle">Simple nutrition tracker & adventure journal</p>
+              <h1
+                className="intro-title intro-accent hue-anim"
+                style={{
+                  backgroundImage: 'linear-gradient(90deg,#7aa2ff,#b38bff,#ff9fb3)',
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text',
+                  color: 'transparent'
+                }}
+              >
+                MacroPal
+              </h1>
+              <p className="intro-subtitle">Simple nutrition tracker & adventure journal</p>
             </div>
           </div>
         </div>
