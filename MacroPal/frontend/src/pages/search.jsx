@@ -13,6 +13,7 @@
   @version October 11, 2025
  */
 
+
 import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import './search.css';

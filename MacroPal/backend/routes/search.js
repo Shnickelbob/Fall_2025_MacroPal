@@ -47,6 +47,7 @@ router.get("/", async (req, res) => {
             };
         }
 
+
         // Get matching foods from the database
         const matchingFoods = await Food.find(filter)
             .select("Name name Calories calories Protein protein Fat fat Carbs carbs Tags tags")

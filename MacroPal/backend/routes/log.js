@@ -10,6 +10,7 @@
  * @version October 19, 2025
  */
 
+
 import express from "express";
 import LogEntry from "../models/LogEntry.js";
 import User from "../models/user.js";

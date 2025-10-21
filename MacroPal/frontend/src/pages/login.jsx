@@ -11,6 +11,7 @@ function RegisterModal({ open, setOpen, onRegistered }) {
 
   const backdropMouseDownOnOverlay = useRef(false);
 
+
   useEffect(() => {
     if (!open) return;
     const handleKey = (e) => e.key === "Escape" && setOpen(false);

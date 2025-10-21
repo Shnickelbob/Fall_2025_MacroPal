@@ -9,6 +9,7 @@
  * @author Emily Howell (Team 6 as a whole)
  * @version October 12, 2025
 */
+
 import { useEffect, useState } from 'react';
 import "../App.css";
 import ModalAddFood from "../Components/ModalAddFood";

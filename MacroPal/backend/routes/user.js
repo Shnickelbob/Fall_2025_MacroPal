@@ -22,6 +22,7 @@ function toGoalsPayload(user) {
   };
 }
 
+
 // GET /api/user/goals
 router.get("/goals", async (req, res) => {
   try {

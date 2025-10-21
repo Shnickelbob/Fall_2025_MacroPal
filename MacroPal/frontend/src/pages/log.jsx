@@ -24,6 +24,7 @@ import { useEffect, useState } from "react";
 import "./log.css";
 import { Link } from "react-router-dom";
 
+
 /*
   top level component
   holds state for loading, items, totals, goals, and simple error text

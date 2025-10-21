@@ -29,6 +29,7 @@ app.use((req, _res, next) => {
  *  Frontend sets localStorage.mp_user_id after login and sends it
  *  as the "x-user-id" header on every request.
  */
+
 function requireUser(req, res, next) {
   const id = req.header("x-user-id");
   if (!id) return res.status(401).json({ error: "Missing x-user-id header" });
