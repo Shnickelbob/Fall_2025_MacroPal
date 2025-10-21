@@ -1,4 +1,4 @@
-/**
+/** 
  * This page will serve as the log page for users to log their
  * daily stats
  * Will include: menu component, a button to nav to the search page
@@ -126,6 +126,7 @@ function HomePage() {
       const r = await fetch("/api/foods", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       });
       const body = await r.json().catch(() => ({}));
@@ -149,32 +150,35 @@ function HomePage() {
         label="Calories"
         bgcolor="#D62E4E"
         height={25}
-        part={today?.totals.cal || 0}
-        total={today?.goals.cal || 0}
+        part={today?.totals?.cal || 0}
+        total={today?.goals?.cal || 0}
       />
+
       <ProgressBar
         label="Protein"
         bgcolor="#81ACA6"
         height={25}
-        part={today?.totals.protein || 0}
-        total={today?.goals.protein || 0}
+        part={today?.totals?.protein || 0}
+        total={today?.goals?.protein || 0}
       />
+
       <ProgressBar
         label="Carbs"
         bgcolor="#E8A202"
         height={25}
-        part={today?.totals.carbs || 0}
-        total={today?.goals.carbs || 0}
+        part={today?.totals?.carbs || 0}
+        total={today?.goals?.carbs || 0}
       />
+
       <ProgressBar
         label="Fat"
         bgcolor="#B0D095"
         height={25}
-        part={today?.totals.fat || 0}
-        total={today?.goals.fat || 0}
+        part={today?.totals?.fat || 0}
+        total={today?.goals?.fat || 0}
       />
 
-      {/* Edit goals */}
+      {/* Edit goals button */}
       <button
         title="Edit goals"
         className="mp-btn-homepage"
@@ -234,4 +238,5 @@ function HomePage() {
     </div>
   );
 }
+
 export default HomePage;

@@ -5,7 +5,6 @@
   so the page code can stay cleaner and not repeat urls all over
 */
 
-
 import { API_BASE, authHeaders } from "./base";
 
 /*
@@ -15,8 +14,14 @@ import { API_BASE, authHeaders } from "./base";
   so whoever calls this can catch and show a message
 */
 export async function fetchToday() {
+  const uid = localStorage.getItem("mp_user_id") || "";
   const res = await fetch(`${API_BASE}/api/log/today`, {
-    headers: authHeaders(),
+    headers: {
+      ...authHeaders(),
+      "x-user-id": uid,            // include header for backend auth
+      Accept: "application/json",
+    },
+    credentials: "include",         // supports session too
   });
 
   if (!res.ok) {

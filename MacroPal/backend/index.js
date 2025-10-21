@@ -4,10 +4,14 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 
+import session from "express-session";
+import MongoStore from "connect-mongo";
+
 import * as user from "./user.js";            // temp auth helpers (register/login)
 import searchRouter from "./routes/search.js";
 import logRouter from "./routes/log.js";
 import userRoutes from "./routes/user.js";
+import Food from "./models/food.js";
 
 dotenv.config();
 
@@ -16,8 +20,36 @@ const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGODB_URI;
 
 // --- Core middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(express.json());
+
+// Optional session support (keeps dev branch happy; your code doesn’t depend on it)
+if (MONGO_URI) {
+  app.use(
+    session({
+      name: "mp.sid",
+      secret: process.env.SESSION_SECRET || "dev-secret-change-me",
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false, // set true only if serving over HTTPS
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      },
+      store: MongoStore.create({
+        mongoUrl: MONGO_URI,
+        dbName: process.env.DB_NAME || undefined,
+        ttl: 60 * 60 * 24 * 7,
+      }),
+    })
+  );
+}
 
 // Debug logger so you can see what hits the backend
 app.use((req, _res, next) => {
@@ -29,10 +61,9 @@ app.use((req, _res, next) => {
  *  Frontend sets localStorage.mp_user_id after login and sends it
  *  as the "x-user-id" header on every request.
  */
-
 function requireUser(req, res, next) {
-  const id = req.header("x-user-id");
-  if (!id) return res.status(401).json({ error: "Missing x-user-id header" });
+  const id = req.header("x-user-id") || req.session?.userId;
+  if (!id) return res.status(401).json({ error: "Missing auth (x-user-id or session)" });
   req.user = { id };
   next();
 }
@@ -65,13 +96,18 @@ app.post("/api/register", async (req, res) => {
 app.post("/api/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-    const doc = await user.verifyLogin(username, password);
+    const doc = await user.verifyLogin(username, password); // returns user doc or null
     if (!doc) {
       return res.status(401).json({ ok: false, error: "Incorrect username or password" });
     }
+
+    // Support both header-based flow (frontend uses mp_user_id) and session-based future
+    const userId = String(doc._id);
+    if (req.session) req.session.userId = userId;
+
     return res.json({
       ok: true,
-      userId: String(doc._id),
+      userId,
       screenName: doc.ScreenName || doc.username || "User",
     });
   } catch (err) {
@@ -84,17 +120,15 @@ app.post("/api/login", async (req, res) => {
 // Public routes
 app.use("/api/search", searchRouter);
 
-// Protected routes (must include x-user-id)
+// Protected routes (must include x-user-id or session)
 app.use("/api/user", requireUser, userRoutes);
 app.use("/api/log", requireUser, logRouter);
 console.log("[index.js] mounted /api/user and /api/log as protected");
 
 // Example food creation (left public as before)
-import Food from "./models/food.js";
 app.post("/api/foods", async (req, res) => {
   try {
-    const found = await Food.findOne({ Name: req.body.Name })
-      .collation({ locale: "en", strength: 2 });
+    const found = await Food.findOne({ Name: req.body.Name }).collation({ locale: "en", strength: 2 });
     if (found) return res.status(409).json({ error: "Food already exists" });
     const food = await Food.create(req.body);
     res.status(201).json(food);

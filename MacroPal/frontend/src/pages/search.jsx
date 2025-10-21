@@ -13,7 +13,6 @@
   @version October 11, 2025
  */
 
-
 import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import './search.css';
@@ -64,37 +63,39 @@ export default function Search() {
         }
     }
 
-    // log one item using the new POST /api/log body shape
+    // log one item using POST /api/log (cookie session)
     async function logFood(food) {
-        // soft lock to avoid double taps
-        if (loggingId) return;
+        if (loggingId) return; // soft lock to avoid double taps
         setLoggingId(food._id);
 
         try {
             const payload = {
                 foodId: food._id,
-                name: food.name,
-                cal: food.calories ?? 0,
-                protein: food.protein ?? 0,
-                carbs: food.carbs ?? 0,
-                fat: food.fat ?? 0,
+                name: food.name ?? food.Name ?? 'Unnamed',
+                cal: food.calories ?? food.Calories ?? 0,
+                protein: food.protein ?? food.Protein ?? 0,
+                carbs: food.carbs ?? food.Carbs ?? 0,
+                fat: food.fat ?? food.Fat ?? 0,
                 qty: 1,
             };
-            const res = await fetch("http://localhost:5000/api/log", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "x-user-id": localStorage.getItem("mp_user_id") || ""
-                },
+
+            const res = await fetch('http://localhost:5000/api/log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include', // use express-session cookie
                 body: JSON.stringify(payload),
             });
-            if (!res.ok) throw new Error("Failed to log");
+
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                throw new Error(body.error || 'Failed to log food');
+            }
 
             // bounce to the Daily Log so they can see it right away
-            window.location.href = "/log";
+            window.location.href = '/log';
         } catch (e) {
             console.error(e);
-            alert("Could not log item.");
+            alert(e.message || 'Could not log item.');
         } finally {
             setLoggingId(null);
         }
@@ -126,7 +127,7 @@ export default function Search() {
                         backgroundImage: 'linear-gradient(90deg,#7aa2ff,#b38bff,#ff9fb3)',
                         WebkitBackgroundClip: 'text',
                         backgroundClip: 'text',
-                        color: 'transparent'
+                        color: 'transparent',
                     }}
                 >
                     Food Finder
@@ -141,7 +142,7 @@ export default function Search() {
                     {/* text input */}
                     <input
                         value={userSearch}
-                        onChange={event => setUserSearch(event.target.value)}
+                        onChange={(event) => setUserSearch(event.target.value)}
                         onKeyDown={onKeyDown}
                         placeholder={`Search by ${by}…`}
                         aria-label="Search text"
@@ -155,7 +156,7 @@ export default function Search() {
                         role="button"
                         aria-haspopup="listbox"
                         aria-expanded={menuOpen}
-                        onClick={() => setMenuOpen(isOpen => !isOpen)}
+                        onClick={() => setMenuOpen((isOpen) => !isOpen)}
                         onBlur={() => setMenuOpen(false)}
                     >
                         <span className="label">{by === 'name' ? 'Name' : 'Tags'}</span>
@@ -166,8 +167,11 @@ export default function Search() {
                                     role="option"
                                     aria-selected={by === 'name'}
                                     className="search-item"
-                                    onMouseDown={event => event.preventDefault()} // keep focus so click registers
-                                    onClick={() => { setBy('name'); setMenuOpen(false); }}
+                                    onMouseDown={(event) => event.preventDefault()} // keep focus so click registers
+                                    onClick={() => {
+                                        setBy('name');
+                                        setMenuOpen(false);
+                                    }}
                                 >
                                     Name
                                 </li>
@@ -175,8 +179,11 @@ export default function Search() {
                                     role="option"
                                     aria-selected={by === 'tags'}
                                     className="search-item"
-                                    onMouseDown={event => event.preventDefault()}
-                                    onClick={() => { setBy('tags'); setMenuOpen(false); }}
+                                    onMouseDown={(event) => event.preventDefault()}
+                                    onClick={() => {
+                                        setBy('tags');
+                                        setMenuOpen(false);
+                                    }}
                                 >
                                     Tags
                                 </li>
@@ -198,7 +205,7 @@ export default function Search() {
                     {error && <div style={{ color: 'crimson' }}>{error}</div>}
 
                     <div style={{ display: 'grid', gap: 10 }}>
-                        {results.map(foodItem => {
+                        {results.map((foodItem) => {
                             const disabled = loggingId === foodItem._id;
                             return (
                                 <div
@@ -215,11 +222,12 @@ export default function Search() {
                                     <div>
                                         <div style={{ fontWeight: 600 }}>{foodItem.name}</div>
                                         <div style={{ fontSize: 14, opacity: 0.85 }}>
-                                            Calories: {foodItem.calories ?? 0} | Protein: {foodItem.protein ?? 0}g | Fat: {foodItem.fat ?? 0}g | Carbs: {foodItem.carbs ?? 0}g
+                                            Calories: {foodItem.calories ?? 0} | Protein: {foodItem.protein ?? 0}g | Fat:{' '}
+                                            {foodItem.fat ?? 0}g | Carbs: {foodItem.carbs ?? 0}g
                                         </div>
                                     </div>
 
-                                    {/* log to today (new POST /api/log body) */}
+                                    {/* log to today */}
                                     <button
                                         type="button"
                                         onClick={() => logFood(foodItem)}
@@ -232,7 +240,7 @@ export default function Search() {
                                             background: 'transparent',
                                             color: '#eaeaea',
                                             cursor: disabled ? 'not-allowed' : 'pointer',
-                                            opacity: disabled ? 0.6 : 1
+                                            opacity: disabled ? 0.6 : 1,
                                         }}
                                     >
                                         {disabled ? 'Logging…' : 'Log'}

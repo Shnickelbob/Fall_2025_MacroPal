@@ -1,15 +1,13 @@
-/** 
+/**
  * This route handles per-user, per-day food logging:
  *  - POST   /api/log        -> add a food to today's log
  *  - GET    /api/log/today  -> fetch today's entries + totals + goals
  *  - DELETE /api/log/:id    -> remove a logged item
- * Uses TEST_USER_ID until login/session is ready.
  * 
  * @author Joseph Allen
  * @contributors 
  * @version October 19, 2025
  */
-
 
 import express from "express";
 import LogEntry from "../models/LogEntry.js";
@@ -18,17 +16,33 @@ import dateKey from "../utils/dateKey.js";
 
 const router = express.Router();
 
-// POST /api/log -> add a food to today's log
+const getUserId = (req) =>
+  req.session?.userId ||
+  req.get("x-user-id") ||
+  req.headers["x-user-id"] ||
+  null;
+
+// POST /api/log  -> add a food to today's log
 router.post("/", async (req, res) => {
   try {
-    const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ error: "Not logged in" });
 
     const key = dateKey();
     const { foodId, name, cal, protein, carbs, fat, qty = 1 } = req.body;
 
+    // Coerce to numbers safely so totals math is reliable
+    const toNum = (v) => (v === "" || v == null ? 0 : Number(v));
     const doc = await LogEntry.create({
-      userId, dateKey: key, foodId, name, cal, protein, carbs, fat, qty,
+      userId,
+      dateKey: key,
+      foodId,
+      name,
+      cal: toNum(cal),
+      protein: toNum(protein),
+      carbs: toNum(carbs),
+      fat: toNum(fat),
+      qty: toNum(qty) || 1,
     });
 
     res.status(201).json(doc);
@@ -40,8 +54,8 @@ router.post("/", async (req, res) => {
 // GET /api/log/today -> entries + totals + goals + remaining
 router.get("/today", async (req, res) => {
   try {
-    const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ error: "Not logged in" });
 
     const key = dateKey();
 
@@ -52,19 +66,19 @@ router.get("/today", async (req, res) => {
 
     const totals = entries.reduce(
       (a, x) => ({
-        cal: a.cal + ((x.cal || 0) * (x.qty || 1)),
-        protein: a.protein + ((x.protein || 0) * (x.qty || 1)),
-        carbs: a.carbs + ((x.carbs || 0) * (x.qty || 1)),
-        fat: a.fat + ((x.fat || 0) * (x.qty || 1)),
+        cal: a.cal + ((Number(x.cal) || 0) * (Number(x.qty) || 1)),
+        protein: a.protein + ((Number(x.protein) || 0) * (Number(x.qty) || 1)),
+        carbs: a.carbs + ((Number(x.carbs) || 0) * (Number(x.qty) || 1)),
+        fat: a.fat + ((Number(x.fat) || 0) * (Number(x.qty) || 1)),
       }),
       { cal: 0, protein: 0, carbs: 0, fat: 0 }
     );
 
     const goals = {
-      cal: user?.Goal_Cals ?? 0,
-      protein: user?.Goal_Protein ?? 0,
-      carbs: user?.Goal_Carbs ?? 0,
-      fat: user?.Goal_Fat ?? 0,
+      cal: Number(user?.Goal_Cals ?? 0),
+      protein: Number(user?.Goal_Protein ?? 0),
+      carbs: Number(user?.Goal_Carbs ?? 0),
+      fat: Number(user?.Goal_Fat ?? 0),
     };
 
     const remaining = {
@@ -83,8 +97,8 @@ router.get("/today", async (req, res) => {
 // DELETE /api/log/:id -> remove one logged item
 router.delete("/:id", async (req, res) => {
   try {
-    const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ error: "Not logged in" });
 
     await LogEntry.deleteOne({ _id: req.params.id, userId });
     res.status(204).end();

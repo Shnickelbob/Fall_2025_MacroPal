@@ -1,7 +1,7 @@
-/**
- * User routes: read/update daily goal values.
- * Uses TEST_USER_ID or "x-user-id" header until auth is ready.
- *
+/** 
+ * This route handles user-related endpoints such as retrieving
+ * and updating a user's daily goal values.
+ * 
  * @author Joseph Allen
  * @version October 19, 2025
  */
@@ -21,12 +21,13 @@ function toGoalsPayload(user) {
     },
   };
 }
+const getUserId = (req) => req.session?.userId || null;
 
 
 // GET /api/user/goals
 router.get("/goals", async (req, res) => {
   try {
-    const userId = req.user?.id;
+    const userId = getUserId(req);
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
     const user = await User.findById(userId).lean();
@@ -42,7 +43,7 @@ router.get("/goals", async (req, res) => {
 // PATCH /api/user/goals
 router.patch("/goals", async (req, res) => {
   try {
-    const userId = req.user?.id;
+    const userId = getUserId(req);
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
     // Accept either {cal, protein, carbs, fat} or {goals:{...}}

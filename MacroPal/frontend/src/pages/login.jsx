@@ -11,7 +11,6 @@ function RegisterModal({ open, setOpen, onRegistered }) {
 
   const backdropMouseDownOnOverlay = useRef(false);
 
-
   useEffect(() => {
     if (!open) return;
     const handleKey = (e) => e.key === "Escape" && setOpen(false);
@@ -129,49 +128,51 @@ function Login() {
       const response = await fetch("http://localhost:5000/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include", // send/receive cookie for express-session
         body: JSON.stringify({ username, password }),
       });
-      const data = await response.json().catch(() => null);
 
-      if (!response.ok || !data?.ok) {
+      // Be resilient to either JSON or text
+      const raw = await response.text();
+      let data = null; // <-- removed TypeScript type annotation
+      try { data = raw ? JSON.parse(raw) : null; } catch { /* ignore */ }
+
+      if (!response.ok) {
         alert(data?.error || "Incorrect username or password");
         return;
       }
-      // Save user info for later requests/pages
-      localStorage.setItem("mp_user_id", data.userId);
-      localStorage.setItem("mp_screen_name", data.screenName || username);
 
-      navigate("/homepage");
+      const loginSuccess =
+        data?.ok === true ||
+        data?.message === "Login Successful";
+
+      if (loginSuccess) {
+        // store IDs/names for later pages (support both payload shapes)
+        if (data?.userId) localStorage.setItem("mp_user_id", String(data.userId));
+        const screen =
+          data?.screenName ??
+          data?.username ??
+          username;
+        if (screen) localStorage.setItem("mp_screen_name", screen);
+
+        navigate("/homepage");
+      } else {
+        alert(data?.error || "Incorrect username or password");
+      }
     } catch (err) {
       console.error(err);
       alert("Unable to reach server. Please try again.");
     }
   };
 
-  // Simple centered column layout using your theme classes;
-  // no new CSS required beyond your existing .mp-* rules.
+  // Simple centered column layout using your theme classes
   const pageWrap = {
     minHeight: "100vh",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
   };
-  const card = {
-    width: "min(92vw, 420px)",
-    background: "#2b2b2b",
-    color: "#fff",
-    borderRadius: 16,
-    boxShadow: "0 12px 40px rgba(0,0,0,.35)",
-    overflow: "hidden",
-  };
   const section = { padding: "20px 22px" };
-  const header = {
-    ...section,
-    paddingBottom: 8,
-    borderBottom: "1px solid rgba(255,255,255,.08)",
-  };
-  const title = { margin: 0, fontSize: "1.6rem", letterSpacing: ".5px" };
-  const subtitle = { margin: "6px 0 0", opacity: 0.85, fontSize: ".95rem" };
   const form = { display: "flex", flexDirection: "column", gap: 10 };
   const label = { textAlign: "left", fontSize: ".9rem", opacity: 0.9 };
   const actions = { display: "flex", gap: 10, marginTop: 8 };
@@ -181,18 +182,11 @@ function Login() {
       <div className="mp-card">
         <div className="mp-card-header">
           <div style={{ maxWidth: 760, margin: '24px auto', padding: '0 16px' }}>
-            {/* Slow rainbow animation for the title */}
             <style>{`
-              @keyframes hueShift {
-                0%   { filter: hue-rotate(0deg); }
-                100% { filter: hue-rotate(360deg); }
-              }
-              .hue-anim {
-                animation: hueShift 16s linear infinite;
-              }
+              @keyframes hueShift { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+              .hue-anim { animation: hueShift 16s linear infinite; }
             `}</style>
 
-            {/* Title and description */}
             <div className="intro">
               <h1
                 className="intro-title intro-accent hue-anim"
@@ -245,15 +239,6 @@ function Login() {
           </div>
         </div>
       </div>
-
-      {/* Demo Food Button */}
-      <button
-        className="mp-btn mp-btn-primary"
-        style={{ position: "fixed", bottom: 20, right: 20 }}
-        onClick={() => (window.location.href = "/demo")}
-      >
-        Add Food Demo
-      </button>
 
       {/* Register modal with same CSS stylings as your ModalAddFood */}
       <RegisterModal
