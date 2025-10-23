@@ -32,93 +32,133 @@ function HomePage() {
   const [today, setToday] = useState(null);
   const [err, setErr] = useState("");
 
-  // Load totals/goals on mount
+  // for users:
+  const [user, setUser] = useState("");
+    useEffect(() => {
+      // grab stored username
+      const storedUser = localStorage.getItem("mp_screen_name");
+      if (storedUser) {
+        setUser(storedUser);
+      }
+    }, []);
+
+
   useEffect(() => {
     let mounted = true;
+    fetchToday()
+      .then((data) => mounted && setToday(data))
+      .catch((e) => mounted && setErr(e.message));
+    return () => { mounted = false; };
+    }, []);
 
-    const load = async () => {
+    // Load totals/goals on mount
+  // useEffect(() => {
+  //   let mounted = true;
+
+  //   const load = async () => {
+  //     try {
+  //       setErr("");
+  //       const data = await fetchToday(); // now sends x-user-id
+  //       if (!mounted) return;
+
+  //       const safe = {
+  //         totals: {
+  //           cal: Number(data?.totals?.cal) || 0,
+  //           protein: Number(data?.totals?.protein) || 0,
+  //           carbs: Number(data?.totals?.carbs) || 0,
+  //           fat: Number(data?.totals?.fat) || 0,
+  //         },
+  //         goals: {
+  //           cal: Number(data?.goals?.cal) || 0,
+  //           protein: Number(data?.goals?.protein) || 0,
+  //           carbs: Number(data?.goals?.carbs) || 0,
+  //           fat: Number(data?.goals?.fat) || 0,
+  //         },
+  //       };
+  //       setToday(safe);
+  //     } catch (e) {
+  //       console.error(e);
+  //       setErr(e.message || "Failed to load dashboard.");
+  //       setToday({
+  //         totals: { cal: 0, protein: 0, carbs: 0, fat: 0 },
+  //         goals: { cal: 0, protein: 0, carbs: 0, fat: 0 },
+  //       });
+  //     }
+  //   };
+
+  //   load();
+
+  //   // Refetch when tab regains focus (e.g., after logging food)
+  //   const onVis = () => { if (document.visibilityState === "visible") load(); };
+  //   window.addEventListener("visibilitychange", onVis);
+  //   return () => {
+  //     mounted = false;
+  //     window.removeEventListener("visibilitychange", onVis);
+  //   };
+  // }, []);
+
+  // Submit handler for the Edit Goals modal
+  // const handleGoalsSubmit = async (patch) => {
+  //   try {
+  //     await patchGoals(patch);     // PATCH /api/user/goals with x-user-id
+  //     const fresh = await fetchToday(); // refresh totals + goals
+  //     setToday({
+  //       totals: {
+  //         cal: Number(fresh?.totals?.cal) || 0,
+  //         protein: Number(fresh?.totals?.protein) || 0,
+  //         carbs: Number(fresh?.totals?.carbs) || 0,
+  //         fat: Number(fresh?.totals?.fat) || 0,
+  //       },
+  //       goals: {
+  //         cal: Number(fresh?.goals?.cal) || 0,
+  //         protein: Number(fresh?.goals?.protein) || 0,
+  //         carbs: Number(fresh?.goals?.carbs) || 0,
+  //         fat: Number(fresh?.goals?.fat) || 0,
+  //       },
+  //     });
+  //     setShowEditGoals(false);
+  //   } catch (e) {
+  //     alert(e.message);
+  //   }
+  // };
+
+    const handleGoalsSubmit = async (patch) => {
       try {
-        setErr("");
-        const data = await fetchToday(); // now sends x-user-id
-        if (!mounted) return;
-
-        const safe = {
-          totals: {
-            cal: Number(data?.totals?.cal) || 0,
-            protein: Number(data?.totals?.protein) || 0,
-            carbs: Number(data?.totals?.carbs) || 0,
-            fat: Number(data?.totals?.fat) || 0,
-          },
-          goals: {
-            cal: Number(data?.goals?.cal) || 0,
-            protein: Number(data?.goals?.protein) || 0,
-            carbs: Number(data?.goals?.carbs) || 0,
-            fat: Number(data?.goals?.fat) || 0,
-          },
-        };
-        setToday(safe);
-      } catch (e) {
-        console.error(e);
-        setErr(e.message || "Failed to load dashboard.");
-        setToday({
-          totals: { cal: 0, protein: 0, carbs: 0, fat: 0 },
-          goals: { cal: 0, protein: 0, carbs: 0, fat: 0 },
+        const r = await fetch("/api/user/goals", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials:"include",
+          body: JSON.stringify(patch), // expects { cal, protein, carbs, fat }
         });
+        const body = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(body.error || "Failed to update goals");
+
+        const fresh = await fetchToday();
+        setToday(fresh);
+
+        setShowEditGoals(false);
+      } catch (e) {
+        alert(e.message);
       }
     };
 
-    load();
-
-    // Refetch when tab regains focus (e.g., after logging food)
-    const onVis = () => { if (document.visibilityState === "visible") load(); };
-    window.addEventListener("visibilitychange", onVis);
-    return () => {
-      mounted = false;
-      window.removeEventListener("visibilitychange", onVis);
-    };
-  }, []);
-
-  // Submit handler for the Edit Goals modal
-  const handleGoalsSubmit = async (patch) => {
-    try {
-      await patchGoals(patch);     // PATCH /api/user/goals with x-user-id
-      const fresh = await fetchToday(); // refresh totals + goals
-      setToday({
-        totals: {
-          cal: Number(fresh?.totals?.cal) || 0,
-          protein: Number(fresh?.totals?.protein) || 0,
-          carbs: Number(fresh?.totals?.carbs) || 0,
-          fat: Number(fresh?.totals?.fat) || 0,
-        },
-        goals: {
-          cal: Number(fresh?.goals?.cal) || 0,
-          protein: Number(fresh?.goals?.protein) || 0,
-          carbs: Number(fresh?.goals?.carbs) || 0,
-          fat: Number(fresh?.goals?.fat) || 0,
-        },
-      });
-      setShowEditGoals(false);
-    } catch (e) {
-      alert(e.message);
-    }
-  };
 
   // Preload goals into the modal when opening it
-  const openEditGoals = async () => {
-    try {
-      const g = await getGoals();
-      setToday((t) => ({
-        ...(t || { totals: { cal: 0, protein: 0, carbs: 0, fat: 0 }, goals: { cal: 0, protein: 0, carbs: 0, fat: 0 } }),
-        goals: {
-          cal: Number(g?.cal) || 0,
-          protein: Number(g?.protein) || 0,
-          carbs: Number(g?.carbs) || 0,
-          fat: Number(g?.fat) || 0,
-        }
-      }));
-    } catch { }
-    setShowEditGoals(true);
-  };
+  // const openEditGoals = async () => {
+  //   try {
+  //     const g = await getGoals();
+  //     setToday((t) => ({
+  //       ...(t || { totals: { cal: 0, protein: 0, carbs: 0, fat: 0 }, goals: { cal: 0, protein: 0, carbs: 0, fat: 0 } }),
+  //       goals: {
+  //         cal: Number(g?.cal) || 0,
+  //         protein: Number(g?.protein) || 0,
+  //         carbs: Number(g?.carbs) || 0,
+  //         fat: Number(g?.fat) || 0,
+  //       }
+  //     }));
+  //   } catch { }
+  //   setShowEditGoals(true);
+  // };
 
   // (Unchanged) Add food demo
   const handleSubmit = async (data) => {
@@ -143,7 +183,7 @@ function HomePage() {
       {/* Menu */}
       <Menu open={open} setOpen={setOpen} />
 
-      <h2>USER'S Daily Goals</h2>
+      <h2>{ user }'s Daily Goals</h2>
       <p>Progress bars for visual indications</p>
 
       <ProgressBar
@@ -179,16 +219,25 @@ function HomePage() {
       />
 
       {/* Edit goals button */}
-      <button
+      {/* <button
         title="Edit goals"
         className="mp-btn-homepage"
         style={{ position: "absolute", top: 20, right: 20 }}
         onClick={openEditGoals}
       >
         <BsPencilFill />
-      </button>
+      </button> */}
 
-      {/* Add food to DB (demo) */}
+    <button
+        title="Edit goals"
+        className="mp-btn-homepage"
+        style={{ position: "absolute", top: 20, right: 20 }}
+        onClick={() => setShowEditGoals(true)}
+        >
+        <BsPencilFill />
+    </button>
+
+     {/* Add food to DB (demo)  */}
       <button
         title="Add food to the database"
         className="mp-btn-homepage"
@@ -197,6 +246,7 @@ function HomePage() {
       >
         <FaPlus />
       </button>
+
 
       {/* Search page */}
       <button
@@ -229,13 +279,22 @@ function HomePage() {
       )}
 
       {/* Goals modal lives here now */}
-      <ModalGoalVals
+      {showEditGoals && (
+        <ModalGoalVals
+          open={showEditGoals}
+          setOpen={setShowEditGoals}
+          onSubmit={handleGoalsSubmit}
+        />
+      )}
+
+      {/* <ModalGoalVals
         open={showEditGoals}
         setOpen={setShowEditGoals}
         onSubmit={handleGoalsSubmit}
-        initialGoals={today?.goals}
-      />
+        // initialGoals={today?.goals}
+      /> */}
     </div>
+
   );
 }
 
