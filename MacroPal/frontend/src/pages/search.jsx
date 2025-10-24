@@ -227,15 +227,6 @@ async function handleLogFood(food) {
                     </div>
                 </>
             )}
-
-        <button
-            className="mp-btn"
-            style={{ position: "absolute", top: 20, left: 20 }}
-            onClick={() => window.history.back()}
-        >
-            ← Back
-        </button>
-
         </div>
     );
 }

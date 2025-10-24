@@ -25,6 +25,13 @@ function HomePage() {
   const [showModal, setShowModal] = useState(false); // for AddFood
   const [showEditGoals, setShowEditGoals] = useState(false); // for edit goals
 
+  // For Header
+  const [screenName, setScreenName] = useState("User");
+  useEffect(() => {
+    setScreenName(localStorage.getItem("mp_screen_name") || "User");
+  }, []);
+
+
   // for the add food modal:
   const handleSubmit = async (data) => {
     try {
@@ -90,8 +97,14 @@ function HomePage() {
     setOpen={setOpen}
     />
 
-    <h2>{ user }'s Daily Goals</h2>
-    <p>Progress bars for visual indications</p>
+    {/*Header*/}
+    <div className="intro">
+      <h1 className="intro-title intro-accent hue-anim">
+        {screenName}'s Daily Dashboard
+      </h1>
+      <p className="intro-subtitle">Track your goals and see today’s progress</p>
+      <div className="intro-divider" />
+    </div>
 
     <ProgressBar
       label="Calories"
@@ -124,6 +137,16 @@ function HomePage() {
       part={today?.totals.fat || 0}
       total={today?.goals.fat || 0}
     />
+
+  {today && Object.keys(today.goals || {}).length > 0 && (
+    (today.goals.cal && today.totals.cal >= today.goals.cal) &&
+    (today.goals.protein && today.totals.protein >= today.goals.protein) &&
+    (today.goals.carbs && today.totals.carbs >= today.goals.carbs) &&
+    (today.goals.fat && today.totals.fat >= today.goals.fat) && (
+      <div className="all-goals-banner">🎉 All goals met for today!</div>
+    )
+  )}
+
 
     {/* // Add Food Button */}
     <button
