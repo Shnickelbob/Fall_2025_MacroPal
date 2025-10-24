@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../App.css";
 
-
-
 /** ------- Register Modal (uses same pattern as ModalAddFood) ------- */
 function RegisterModal({ open, setOpen, onRegistered }) {
   const [regUsername, setRegUsername] = useState("");
@@ -121,59 +119,60 @@ function RegisterModal({ open, setOpen, onRegistered }) {
 /** -------------------- Login Page -------------------- */
 function Login() {
   const navigate = useNavigate();
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [openRegister, setOpenRegister] = useState(false);
 
-const verifyLogin = async () => {
-  try {
-    const response = await fetch("http://localhost:5000/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",                 // <-- send/receive cookie
-      body: JSON.stringify({ username, password }),
-    });
+  const verifyLogin = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // send/receive cookie for express-session
+        body: JSON.stringify({ username, password }),
+      });
 
-    const result = await response.json().catch(() => ({}));
+      // Be resilient to either JSON or text
+      const raw = await response.text();
+      let data = null; // <-- removed TypeScript type annotation
+      try { data = raw ? JSON.parse(raw) : null; } catch { /* ignore */ }
 
-    if (response.ok && result?.message === "Login Successful") {
-      localStorage.setItem("username", result.username ?? username);
-      navigate("/homepage");
-    } else {
-      alert("Incorrect username or password");
+      if (!response.ok) {
+        alert(data?.error || "Incorrect username or password");
+        return;
+      }
+
+      const loginSuccess =
+        data?.ok === true ||
+        data?.message === "Login Successful";
+
+      if (loginSuccess) {
+        // store IDs/names for later pages (support both payload shapes)
+        if (data?.userId) localStorage.setItem("mp_user_id", String(data.userId));
+        const screen =
+          data?.screenName ??
+          data?.username ??
+          username;
+        if (screen) localStorage.setItem("mp_screen_name", screen);
+
+        navigate("/homepage");
+      } else {
+        alert(data?.error || "Incorrect username or password");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Unable to reach server. Please try again.");
     }
-  } catch (err) {
-    console.error(err);
-    alert("Unable to reach server. Please try again.");
-  }
-};
+  };
 
-
-  // Simple centered column layout using your theme classes;
-  // no new CSS required beyond your existing .mp-* rules.
+  // Simple centered column layout using your theme classes
   const pageWrap = {
     minHeight: "100vh",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
   };
-  const card = {
-    width: "min(92vw, 420px)",
-    background: "#2b2b2b",
-    color: "#fff",
-    borderRadius: 16,
-    boxShadow: "0 12px 40px rgba(0,0,0,.35)",
-    overflow: "hidden",
-  };
   const section = { padding: "20px 22px" };
-  const header = {
-    ...section,
-    paddingBottom: 8,
-    borderBottom: "1px solid rgba(255,255,255,.08)",
-  };
-  const title = { margin: 0, fontSize: "1.6rem", letterSpacing: ".5px" };
-  const subtitle = { margin: "6px 0 0", opacity: 0.85, fontSize: ".95rem" };
   const form = { display: "flex", flexDirection: "column", gap: 10 };
   const label = { textAlign: "left", fontSize: ".9rem", opacity: 0.9 };
   const actions = { display: "flex", gap: 10, marginTop: 8 };
@@ -183,31 +182,24 @@ const verifyLogin = async () => {
       <div className="mp-card">
         <div className="mp-card-header">
           <div style={{ maxWidth: 760, margin: '24px auto', padding: '0 16px' }}>
-            {/* Slow rainbow animation for the title */}
             <style>{`
-              @keyframes hueShift {
-                0%   { filter: hue-rotate(0deg); }
-                100% { filter: hue-rotate(360deg); }
-              }
-              .hue-anim {
-                animation: hueShift 16s linear infinite;
-              }
+              @keyframes hueShift { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+              .hue-anim { animation: hueShift 16s linear infinite; }
             `}</style>
 
-            {/* Title and description */}
             <div className="intro">
-                <h1
-                    className="intro-title intro-accent hue-anim"
-                    style={{
-                        backgroundImage: 'linear-gradient(90deg,#7aa2ff,#b38bff,#ff9fb3)',
-                        WebkitBackgroundClip: 'text',
-                        backgroundClip: 'text',
-                        color: 'transparent'
-                    }}
-                >
-                    MacroPal
-                </h1>
-                <p className="intro-subtitle">Simple nutrition tracker & adventure journal</p>
+              <h1
+                className="intro-title intro-accent hue-anim"
+                style={{
+                  backgroundImage: 'linear-gradient(90deg,#7aa2ff,#b38bff,#ff9fb3)',
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text',
+                  color: 'transparent'
+                }}
+              >
+                MacroPal
+              </h1>
+              <p className="intro-subtitle">Simple nutrition tracker & adventure journal</p>
             </div>
           </div>
         </div>
