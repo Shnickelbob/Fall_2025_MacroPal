@@ -1,32 +1,26 @@
-/** 
- * This Modal will allow users to input/edit their daily
- * Nutritional goal values
- * @author Joseph Allen - Modified by Emily for Goals
- * @version October 16, 2025
-*/
-
 import { useEffect, useRef, useState } from "react";
 import "../App.css";
 
-function ModalGoalVals({ open, setOpen, onSubmit, initialGoals }) {
+function ModalGoalVals({ open, setOpen, onSubmit /* initialGoals is optional but unused here for value binding */ }) {
   const [calories, setCalories] = useState("");
-  const [protein, setProtein] = useState("");
-  const [fat, setFat] = useState("");
-  const [carbs, setCarbs] = useState("");
+  const [protein, setProtein]   = useState("");
+  const [fat, setFat]           = useState("");
+  const [carbs, setCarbs]       = useState("");
   const backdropMouseDownOnOverlay = useRef(false);
 
+  // On open: keep inputs EMPTY so placeholders show; don't preload values
   useEffect(() => {
     if (!open) return;
-    if (initialGoals) {
-      setCalories(String(initialGoals.cal ?? ""));
-      setProtein(String(initialGoals.protein ?? ""));
-      setFat(String(initialGoals.fat ?? ""));
-      setCarbs(String(initialGoals.carbs ?? ""));
-    }
+
+    setCalories("");
+    setProtein("");
+    setFat("");
+    setCarbs("");
+
     const handleKey = (e) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [open, setOpen, initialGoals]);
+  }, [open, setOpen]);
 
   if (!open) return null;
 
@@ -34,17 +28,12 @@ function ModalGoalVals({ open, setOpen, onSubmit, initialGoals }) {
     if (["e", "E", "+", "-", ".", ","].includes(e.key)) e.preventDefault();
   };
   const onlyDigits = (v) => v.replace(/\D/g, "");
-  const toInt = (v, def = 0) => {
-    if (v === "" || v === null || v === undefined) return def;
-    const n = Math.trunc(Number(v));
-    return Number.isFinite(n) ? n : def;
-  };
 
   const handleSubmit = async () => {
     const patch = {};
 
     const addIfChanged = (key, value, label) => {
-      if (value === "") return; // don’t update if blank
+      if (value === "") return; // unchanged
       const n = Math.trunc(Number(value));
       if (!Number.isInteger(n) || n < 0 || n > 5000) {
         alert(`${label} must be an integer between 0 and 5000.`);
@@ -56,8 +45,8 @@ function ModalGoalVals({ open, setOpen, onSubmit, initialGoals }) {
     try {
       addIfChanged("cal", calories, "Calories");
       addIfChanged("protein", protein, "Protein");
-      addIfChanged("fat", fat, "Fat");
       addIfChanged("carbs", carbs, "Carbohydrates");
+      addIfChanged("fat", fat, "Fat");
 
       if (Object.keys(patch).length === 0) {
         setOpen(false);
@@ -66,6 +55,7 @@ function ModalGoalVals({ open, setOpen, onSubmit, initialGoals }) {
 
       await onSubmit?.(patch);
 
+      // clear after successful save
       setCalories("");
       setProtein("");
       setFat("");
@@ -75,7 +65,6 @@ function ModalGoalVals({ open, setOpen, onSubmit, initialGoals }) {
       console.error(e);
     }
   };
-
 
   return (
     <div
@@ -98,66 +87,58 @@ function ModalGoalVals({ open, setOpen, onSubmit, initialGoals }) {
       >
         <div className="mp-modal-header">
           <strong>Edit Nutritional Goal Values</strong>
-          <button className="mp-btn" onClick={() => setOpen(false)} aria-label="Close">
-            ✕
-          </button>
+          <button className="mp-btn" onClick={() => setOpen(false)} aria-label="Close">✕</button>
         </div>
 
         <div className="mp-modal-body">
           <div className="mp-form">
-
             <input
               className="mp-input"
               type="number"
               inputMode="numeric"
-              min="0"
-              max="5000"
-              step="1"
-              placeholder="Calories *"
+              min="0" max="5000" step="1"
+              placeholder="Calories"
               value={calories}
               onKeyDown={blockNonInt}
               onChange={(e) => setCalories(onlyDigits(e.target.value))}
+              autoComplete="off"
             />
 
             <input
               className="mp-input"
               type="number"
               inputMode="numeric"
-              min="0"
-              max="5000"
-              step="1"
+              min="0" max="5000" step="1"
               placeholder="Protein (g)"
               value={protein}
               onKeyDown={blockNonInt}
               onChange={(e) => setProtein(onlyDigits(e.target.value))}
+              autoComplete="off"
             />
 
             <input
               className="mp-input"
               type="number"
               inputMode="numeric"
-              min="0"
-              max="5000"
-              step="1"
+              min="0" max="5000" step="1"
               placeholder="Carbohydrates (g)"
               value={carbs}
               onKeyDown={blockNonInt}
               onChange={(e) => setCarbs(onlyDigits(e.target.value))}
+              autoComplete="off"
             />
 
             <input
               className="mp-input"
               type="number"
               inputMode="numeric"
-              min="0"
-              max="5000"
-              step="1"
+              min="0" max="5000" step="1"
               placeholder="Fat (g)"
               value={fat}
               onKeyDown={blockNonInt}
               onChange={(e) => setFat(onlyDigits(e.target.value))}
+              autoComplete="off"
             />
-
           </div>
         </div>
 

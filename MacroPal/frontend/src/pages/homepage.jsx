@@ -1,45 +1,47 @@
 /** 
- * This page will serve as the log page for users to log their
- * daily stats
- * Will include: menu component, a button to nav to the search page
- * a button to add a food to the database
- * visual progress bars
- * and access to the logged items for that day
- *
- * @author Emily Howell (Team 6 as a whole)
+ * Home dashboard: progress vs goals + quick actions
+ * @author Team 6
  * @version October 12, 2025
-*/
-
-import { useEffect, useState } from 'react';
+ */
+import { useEffect, useState } from "react";
 import "../App.css";
-import ModalAddFood from "../Components/ModalAddFood";
-import ModalGoalVals from "../Components/ModalGoalVals";
-import Menu from "../Components/Menu";
+// NOTE: Menu is global via App.jsx, so no local Menu import here.
 import { FaPlus, FaList } from "react-icons/fa";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import { BsPencilFill } from "react-icons/bs";
 import ProgressBar from "../Components/ProgressBar";
+import ModalAddFood from "../Components/ModalAddFood";
+import ModalGoalVals from "../Components/ModalGoalVals";
 import { Link } from "react-router-dom";
 import { fetchToday } from "../api/log";
-import { getGoals, patchGoals } from "../api/user";
+import { patchGoals /* getGoals */ } from "../api/user";
 
 function HomePage() {
-  const [open, setOpen] = useState(false);           // menu
+  // modals
   const [showAddFood, setShowAddFood] = useState(false);
   const [showEditGoals, setShowEditGoals] = useState(false);
 
-  // Today’s data from backend
-  const [today, setToday] = useState(null);
+  // header name
+  const [screenName, setScreenName] = useState("User");
+  useEffect(() => {
+    setScreenName(localStorage.getItem("mp_screen_name") || "User");
+  }, []);
+
+  // data
+  const [today, setToday] = useState({
+    totals: { cal: 0, protein: 0, carbs: 0, fat: 0 },
+    goals: { cal: 0, protein: 0, carbs: 0, fat: 0 },
+  });
   const [err, setErr] = useState("");
 
-  // Load totals/goals on mount
+  // load + refresh on visibility
   useEffect(() => {
     let mounted = true;
 
     const load = async () => {
       try {
         setErr("");
-        const data = await fetchToday(); // now sends x-user-id
+        const data = await fetchToday(); // should include x-user-id internally
         if (!mounted) return;
 
         const safe = {
@@ -68,21 +70,22 @@ function HomePage() {
     };
 
     load();
-
-    // Refetch when tab regains focus (e.g., after logging food)
-    const onVis = () => { if (document.visibilityState === "visible") load(); };
+    const onVis = () => {
+      if (document.visibilityState === "visible") load();
+    };
     window.addEventListener("visibilitychange", onVis);
+
     return () => {
       mounted = false;
       window.removeEventListener("visibilitychange", onVis);
     };
   }, []);
 
-  // Submit handler for the Edit Goals modal
+  // Edit Goals submit
   const handleGoalsSubmit = async (patch) => {
     try {
-      await patchGoals(patch);     // PATCH /api/user/goals with x-user-id
-      const fresh = await fetchToday(); // refresh totals + goals
+      await patchGoals(patch); // PATCH /api/user/goals with x-user-id
+      const fresh = await fetchToday();
       setToday({
         totals: {
           cal: Number(fresh?.totals?.cal) || 0,
@@ -103,24 +106,7 @@ function HomePage() {
     }
   };
 
-  // Preload goals into the modal when opening it
-  const openEditGoals = async () => {
-    try {
-      const g = await getGoals();
-      setToday((t) => ({
-        ...(t || { totals: { cal: 0, protein: 0, carbs: 0, fat: 0 }, goals: { cal: 0, protein: 0, carbs: 0, fat: 0 } }),
-        goals: {
-          cal: Number(g?.cal) || 0,
-          protein: Number(g?.protein) || 0,
-          carbs: Number(g?.carbs) || 0,
-          fat: Number(g?.fat) || 0,
-        }
-      }));
-    } catch { }
-    setShowEditGoals(true);
-  };
-
-  // (Unchanged) Add food demo
+  // Add food demo submit
   const handleSubmit = async (data) => {
     try {
       const r = await fetch("/api/foods", {
@@ -137,15 +123,27 @@ function HomePage() {
     }
   };
 
+  const allGoalsMet =
+    today &&
+    today.goals &&
+    today.totals &&
+    (today.goals.cal ? today.totals.cal >= today.goals.cal : false) &&
+    (today.goals.protein ? today.totals.protein >= today.goals.protein : false) &&
+    (today.goals.carbs ? today.totals.carbs >= today.goals.carbs : false) &&
+    (today.goals.fat ? today.totals.fat >= today.goals.fat : false);
+
   return (
-    <div className="" style={{}}>
+    <div>
+      {/* Header */}
+      <div className="intro">
+        <h1 className="intro-title intro-accent hue-anim">
+          {screenName}'s Daily Dashboard
+        </h1>
+        <p className="intro-subtitle">Track your goals and see today’s progress</p>
+        <div className="intro-divider" />
+      </div>
 
-      {/* Menu */}
-      <Menu open={open} setOpen={setOpen} />
-
-      <h2>USER'S Daily Goals</h2>
-      <p>Progress bars for visual indications</p>
-
+      {/* Progress */}
       <ProgressBar
         label="Calories"
         bgcolor="#D62E4E"
@@ -153,7 +151,6 @@ function HomePage() {
         part={today?.totals?.cal || 0}
         total={today?.goals?.cal || 0}
       />
-
       <ProgressBar
         label="Protein"
         bgcolor="#81ACA6"
@@ -161,7 +158,6 @@ function HomePage() {
         part={today?.totals?.protein || 0}
         total={today?.goals?.protein || 0}
       />
-
       <ProgressBar
         label="Carbs"
         bgcolor="#E8A202"
@@ -169,7 +165,6 @@ function HomePage() {
         part={today?.totals?.carbs || 0}
         total={today?.goals?.carbs || 0}
       />
-
       <ProgressBar
         label="Fat"
         bgcolor="#B0D095"
@@ -178,17 +173,22 @@ function HomePage() {
         total={today?.goals?.fat || 0}
       />
 
-      {/* Edit goals button */}
+      {/* All-goals banner */}
+      {allGoalsMet && (
+        <div className="all-goals-banner">🎉 All goals met for today!</div>
+      )}
+
+      {/* Edit goals */}
       <button
         title="Edit goals"
         className="mp-btn-homepage"
         style={{ position: "absolute", top: 20, right: 20 }}
-        onClick={openEditGoals}
+        onClick={() => setShowEditGoals(true)}
       >
         <BsPencilFill />
       </button>
 
-      {/* Add food to DB (demo) */}
+      {/* Add food */}
       <button
         title="Add food to the database"
         className="mp-btn-homepage"
@@ -198,7 +198,7 @@ function HomePage() {
         <FaPlus />
       </button>
 
-      {/* Search page */}
+      {/* Search */}
       <button
         title="Search for food items"
         className="mp-btn-homepage"
@@ -208,7 +208,7 @@ function HomePage() {
         <FaMagnifyingGlass />
       </button>
 
-      {/* Daily log (link) */}
+      {/* Daily log link */}
       <Link
         to="/log"
         title="View daily log"
@@ -218,8 +218,10 @@ function HomePage() {
         <FaList />
       </Link>
 
+      {/* Errors */}
       {err && <div style={{ color: "crimson", marginTop: 8 }}>{err}</div>}
 
+      {/* Modals */}
       {showAddFood && (
         <ModalAddFood
           open={showAddFood}
@@ -227,14 +229,14 @@ function HomePage() {
           onSubmit={handleSubmit}
         />
       )}
-
-      {/* Goals modal lives here now */}
-      <ModalGoalVals
-        open={showEditGoals}
-        setOpen={setShowEditGoals}
-        onSubmit={handleGoalsSubmit}
-        initialGoals={today?.goals}
-      />
+      {showEditGoals && (
+        <ModalGoalVals
+          open={showEditGoals}
+          setOpen={setShowEditGoals}
+          onSubmit={handleGoalsSubmit}
+          initialGoals={today?.goals}
+        />
+      )}
     </div>
   );
 }
