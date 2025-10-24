@@ -7,11 +7,12 @@ import MenuTest from "./DemoPages/MenuTest.jsx";
 import Search from "./pages/search.jsx";
 import HomePage from "./pages/homepage.jsx";
 import GoalValsTest from "./DemoPages/GoalValsTest.jsx";
-import Menu from "./Components/Menu";            // <-- global menu
+import DailyLog from "./pages/log.jsx";       // keep Emily’s addition
+import Menu from "./Components/Menu";         // keep global menu
 import { useState } from "react";
 
 function App() {
-  const [open, setOpen] = useState(false);      // global menu state
+  const [open, setOpen] = useState(false);   // global menu state
   return (
     <Router>
       <AppContent open={open} setOpen={setOpen} />
@@ -19,10 +20,9 @@ function App() {
   );
 }
 
-// split so we can use useLocation
 function AppContent({ open, setOpen }) {
   const location = useLocation();
-  const hideMenu = location.pathname === "/";   // hide on login
+  const hideMenu = location.pathname === "/"; // hide on login
 
   return (
     <>
@@ -41,6 +41,7 @@ function AppContent({ open, setOpen }) {
         <Route path="/search" element={<Search />} />
         <Route path="/homepage" element={<HomePage />} />
         <Route path="/goaldemo" element={<GoalValsTest />} />
+        <Route path="/log" element={<DailyLog />} /> {/* merged route */}
       </Routes>
     </>
   );

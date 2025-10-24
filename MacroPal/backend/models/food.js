@@ -5,6 +5,7 @@
  * @version October 11, 2025
 */
 
+
 import mongoose from "mongoose"; // uses mongoose to build the schema and model
 
 const foodSchema = new mongoose.Schema({ // creates the food schema

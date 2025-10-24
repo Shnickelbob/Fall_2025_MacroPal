@@ -13,7 +13,8 @@
  * @version October 19, 2025
  */
 
-import mongoose from "mongoose"; // only mongoose is needed here
+
+import mongoose from "mongoose";
 const { Schema, model } = mongoose;
 
 // Minimal auth schema for temporary register/login helpers
@@ -25,7 +26,7 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
-//  Use a DIFFERENT model name to avoid overwrite, but SAME collection ("users")
+// Use a DIFFERENT model name to avoid overwrite, but SAME collection ("users")
 const AuthUser =
   mongoose.models.AuthUser || model("AuthUser", userSchema, "users");
 
@@ -39,8 +40,8 @@ export const registerNewUser = async (user, pass) => {
   return true;
 };
 
-// Verify login (very basic — replace with real auth later)
+// Verify login (return the user doc; frontend needs _id + optional ScreenName)
 export const verifyLogin = async (user, pass) => {
   const found = await AuthUser.findOne({ username: user, password: pass }).lean();
-  return !!found;
+  return found || null;
 };
