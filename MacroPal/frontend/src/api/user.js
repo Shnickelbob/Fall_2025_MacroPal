@@ -31,6 +31,7 @@ export async function patchGoals(patch) {
     const res = await fetch(`${API_BASE}/api/user/goals`, {
         method: "PATCH",
         headers: authHeaders(),
+        credentials: "include",
         body: JSON.stringify(patch),
     });
     const body = await res.json().catch(() => ({}));

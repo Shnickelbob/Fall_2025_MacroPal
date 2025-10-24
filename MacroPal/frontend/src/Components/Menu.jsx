@@ -36,6 +36,7 @@ const Menu = ({ open, setOpen }) => {
         </button>
         <a href="/homepage">Homepage</a>
         <a href="/search">Search</a>
+        <a href="/log">Daily Log</a>
         <a href="/">Log out</a>
       </nav>
     </div>

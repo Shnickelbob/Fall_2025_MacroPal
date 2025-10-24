@@ -7,8 +7,8 @@ import MenuTest from "./DemoPages/MenuTest.jsx";
 import Search from "./pages/search.jsx";
 import HomePage from "./pages/homepage.jsx";
 import GoalValsTest from "./DemoPages/GoalValsTest.jsx";
-import DailyLog from "./pages/log.jsx";       // keep Emily’s addition
-import Menu from "./Components/Menu";         // keep global menu
+import DailyLog from "./pages/log.jsx";
+import Menu from "./Components/Menu";
 import { useState } from "react";
 
 function App() {

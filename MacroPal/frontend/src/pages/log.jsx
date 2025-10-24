@@ -142,15 +142,6 @@ export default function DailyLog() {
                 </div>
             </div>
 
-            {/* simple back button like other screens */}
-            <button
-                className="mp-btn"
-                style={{ position: "absolute", top: 20, left: 20 }}
-                onClick={() => window.history.back()}
-            >
-                Back
-            </button>
-
             {/* core section with loading, error, empty, and list states */}
             {loading && <div>Loading…</div>}
             {error && <div style={{ color: "crimson" }}>{error}</div>}
@@ -200,8 +191,6 @@ export default function DailyLog() {
                     zIndex: 1000
                 }}
             >
-                <Link to="/homepage" className="pill-btn">Home</Link>
-                <Link to="/search" className="pill-btn">Log Food</Link>
             </div>
         </div>
     );

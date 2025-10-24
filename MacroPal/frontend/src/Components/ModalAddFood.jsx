@@ -29,67 +29,82 @@ function ModalAddFood({ open, setOpen, onSubmit }) {
     return Number.isFinite(n) ? n : def;
   };
 
-const handleSubmit = () => {
-  const n = name.trim();
-  if (n.length < 2) {
-    alert("Enter a valid food name (min 2 chars).");
-    return;
-  }
+  const handleSubmit = () => {
+    const n = name.trim();
 
-  // simple numeric conversion
-  const toIntSafe = (v) => {
-    const n = Number(v);
-    return Number.isFinite(n) ? Math.trunc(n) : null;
-  };
-
-  // validation helper
-  const validateField = (val, label) => {
-    if (val === "" || val === null || val === undefined) {
-      alert(`${label} is required.`);
-      return false;
+    // name validation (no digits, min 2 chars, basic characters)
+    if (!n) {
+      alert("Enter a valid food name (required).");
+      return;
     }
-    const num = toIntSafe(val);
-    if (!Number.isInteger(num) || num < 0 || num > 5000) {
-      alert(`${label} must be an integer between 0 and 5000.`);
-      return false;
+    if (/\d/.test(n)) {
+      alert("Food name cannot contain numbers.");
+      return;
     }
-    return true;
+    if (n.length < 2) {
+      alert("Enter a valid food name (min 2 chars).");
+      return;
+    }
+    // Optional: limit allowed characters a bit more (letters, space, apostrophe, hyphen, ampersand, period)
+    if (!/^[A-Za-z][A-Za-z\s'&.\-]*$/.test(n)) {
+      alert("Food name can use letters, spaces, ', -, &, . only.");
+      return;
+    }
+
+    // simple numeric conversion
+    const toIntSafe = (v) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? Math.trunc(n) : null;
+    };
+
+    // validation helper
+    const validateField = (val, label) => {
+      if (val === "" || val === null || val === undefined) {
+        alert(`${label} is required.`);
+        return false;
+      }
+      const num = toIntSafe(val);
+      if (!Number.isInteger(num) || num < 0 || num > 5000) {
+        alert(`${label} must be an integer between 0 and 5000.`);
+        return false;
+      }
+      return true;
+    };
+
+    if (
+      !validateField(calories, "Calories") ||
+      !validateField(protein, "Protein") ||
+      !validateField(fat, "Fat") ||
+      !validateField(carbs, "Carbohydrates")
+    ) return;
+
+    const cal = Math.trunc(Number(calories));
+    const pro = Math.trunc(Number(protein));
+    const fa  = Math.trunc(Number(fat));
+    const ca  = Math.trunc(Number(carbs));
+
+    const cleanTags = tags
+      .map((t) => t.trim().toLowerCase())
+      .filter((t) => t.length > 0 && t.length <= 30);
+
+    onSubmit?.({
+      Name: n,
+      Calories: cal,
+      Protein: pro,
+      Fat: fa,
+      Carbs: ca,
+      Tags: cleanTags,
+    });
+
+    // reset form
+    setName("");
+    setCalories("");
+    setProtein("");
+    setFat("");
+    setCarbs("");
+    setTags([""]);
+    setOpen(false);
   };
-
-  if (
-    !validateField(calories, "Calories") ||
-    !validateField(protein, "Protein") ||
-    !validateField(fat, "Fat") ||
-    !validateField(carbs, "Carbohydrates")
-  ) return;
-
-  const cal = Math.trunc(Number(calories));
-  const pro = Math.trunc(Number(protein));
-  const fa  = Math.trunc(Number(fat));
-  const ca  = Math.trunc(Number(carbs));
-
-  const cleanTags = tags
-    .map((t) => t.trim().toLowerCase())
-    .filter((t) => t.length > 0 && t.length <= 30);
-
-  onSubmit?.({
-    Name: n,
-    Calories: cal,
-    Protein: pro,
-    Fat: fa,
-    Carbs: ca,
-    Tags: cleanTags,
-  });
-
-  // reset form
-  setName("");
-  setCalories("");
-  setProtein("");
-  setFat("");
-  setCarbs("");
-  setTags([""]);
-  setOpen(false);
-};
 
   return (
     <div
@@ -123,7 +138,9 @@ const handleSubmit = () => {
               className="mp-input"
               placeholder="Food name *"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              // strip any digits live as the user types
+              onChange={(e) => setName(e.target.value.replace(/\d/g, ""))}
+              autoComplete="off"
             />
 
             <input
