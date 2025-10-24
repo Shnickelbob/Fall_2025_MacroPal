@@ -29,45 +29,67 @@ function ModalAddFood({ open, setOpen, onSubmit }) {
     return Number.isFinite(n) ? n : def;
   };
 
-  const handleSubmit = () => {
-    const n = name.trim();
-    if (n.length < 2) return alert("Enter a valid food name (min 2 chars).");
-    const cal = toInt(calories, NaN);
-    if (!Number.isInteger(cal) || cal < 0 || cal > 5000)
-      return alert("Calories must be an integer between 0 and 5000.");
-    const pro = toInt(protein, 0);
-    const fa = toInt(fat, 0);
-    const ca = toInt(carbs, 0);
-    for (const [label, val] of [
-      ["Protein", pro],
-      ["Fat", fa],
-      ["Carbohydrates", ca],
-    ]) {
-      if (!Number.isInteger(val) || val < 0 || val > 5000)
-        return alert(`${label} must be an integer between 0 and 5000.`);
-    }
+const handleSubmit = () => {
+  const n = name.trim();
+  if (n.length < 2) {
+    alert("Enter a valid food name (min 2 chars).");
+    return;
+  }
 
-    const cleanTags = tags
-      .map((t) => t.trim().toLowerCase())
-      .filter((t) => t.length > 0 && t.length <= 30);
-
-    onSubmit?.({
-      Name: n,
-      Calories: cal,
-      Protein: pro,
-      Fat: fa,
-      Carbs: ca,
-      Tags: cleanTags,
-    });
-
-    setName("");
-    setCalories("");
-    setProtein("");
-    setFat("");
-    setCarbs("");
-    setTags([""]);
-    setOpen(false);
+  // simple numeric conversion
+  const toIntSafe = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? Math.trunc(n) : null;
   };
+
+  // validation helper
+  const validateField = (val, label) => {
+    if (val === "" || val === null || val === undefined) {
+      alert(`${label} is required.`);
+      return false;
+    }
+    const num = toIntSafe(val);
+    if (!Number.isInteger(num) || num < 0 || num > 5000) {
+      alert(`${label} must be an integer between 0 and 5000.`);
+      return false;
+    }
+    return true;
+  };
+
+  if (
+    !validateField(calories, "Calories") ||
+    !validateField(protein, "Protein") ||
+    !validateField(fat, "Fat") ||
+    !validateField(carbs, "Carbohydrates")
+  ) return;
+
+  const cal = Math.trunc(Number(calories));
+  const pro = Math.trunc(Number(protein));
+  const fa  = Math.trunc(Number(fat));
+  const ca  = Math.trunc(Number(carbs));
+
+  const cleanTags = tags
+    .map((t) => t.trim().toLowerCase())
+    .filter((t) => t.length > 0 && t.length <= 30);
+
+  onSubmit?.({
+    Name: n,
+    Calories: cal,
+    Protein: pro,
+    Fat: fa,
+    Carbs: ca,
+    Tags: cleanTags,
+  });
+
+  // reset form
+  setName("");
+  setCalories("");
+  setProtein("");
+  setFat("");
+  setCarbs("");
+  setTags([""]);
+  setOpen(false);
+};
 
   return (
     <div
@@ -124,7 +146,7 @@ function ModalAddFood({ open, setOpen, onSubmit }) {
               min="0"
               max="5000"
               step="1"
-              placeholder="Protein (g)"
+              placeholder="Protein (g)*"
               value={protein}
               onKeyDown={blockNonInt}
               onChange={(e) => setProtein(onlyDigits(e.target.value))}
@@ -137,7 +159,7 @@ function ModalAddFood({ open, setOpen, onSubmit }) {
               min="0"
               max="5000"
               step="1"
-              placeholder="Fat (g)"
+              placeholder="Fat (g)*"
               value={fat}
               onKeyDown={blockNonInt}
               onChange={(e) => setFat(onlyDigits(e.target.value))}
@@ -150,7 +172,7 @@ function ModalAddFood({ open, setOpen, onSubmit }) {
               min="0"
               max="5000"
               step="1"
-              placeholder="Carbohydrates (g)"
+              placeholder="Carbohydrates (g)*"
               value={carbs}
               onKeyDown={blockNonInt}
               onChange={(e) => setCarbs(onlyDigits(e.target.value))}
