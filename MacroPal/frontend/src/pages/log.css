@@ -6,13 +6,10 @@
  * @version October 19, 2025
  */
 
-/* Page container */
 .log-container {
     max-width: 620px;
-    /* tighter column (was 1000px) */
     margin: 24px auto;
     padding: 0 12px;
-    /* slightly tighter side padding */
 }
 
 @keyframes hueShift {
@@ -29,7 +26,6 @@
     animation: hueShift 16s linear infinite;
 }
 
-/* Title block (same classes as search.css so it matches) */
 .intro {
     margin: 56px auto 20px;
     text-align: center;
@@ -64,26 +60,20 @@
     border-radius: 999px;
 }
 
-/* List of items */
 .log-list {
     display: grid;
     gap: 8px;
-    /* tighter stack */
 }
 
-/* Each item pill (matches search aesthetics) */
 .log-card {
     background: #161616;
     border: 1px solid #2a2a2a;
     border-radius: 16px;
     padding: 8px 12px;
-    /* tighter horizontal padding */
     display: flex;
     align-items: center;
     justify-content: center;
-    /* center text + button as a group */
     gap: 16px;
-    /* space between text block & button */
     transition: background .15s ease, border-color .15s ease, transform .02s ease;
 }
 
@@ -96,7 +86,6 @@
     transform: translateY(1px);
 }
 
-/* center the text within the left block */
 .log-card>div {
     text-align: center;
 }
@@ -112,7 +101,6 @@
     opacity: .9;
 }
 
-/* Remove button styled like search button */
 .log-remove {
     height: 34px;
     padding: 0 12px;
@@ -137,7 +125,6 @@
     transform: translateY(1px);
 }
 
-/* --- Daily Summary pill (above the list) --- */
 .log-summary {
     background: #161616;
     border: 1px solid #2a2a2a;
@@ -154,7 +141,6 @@
     font-size: 16px;
     letter-spacing: .2px;
     text-decoration: underline;
-    /* chosen option */
 }
 
 .log-summary-rows {
@@ -168,7 +154,6 @@
     color: #ffffff;
 }
 
-/* Empty state */
 .empty-state {
     margin-top: 12px;
     text-align: center;
@@ -187,7 +172,6 @@
     flex-wrap: wrap;
 }
 
-/* Buttons that match your dark pill aesthetic */
 .pill-btn {
     display: inline-flex;
     align-items: center;
@@ -217,7 +201,6 @@
     color: #d4d4d4;
 }
 
-/* Floating action area (bottom-left) */
 .log-fab-left {
     position: fixed;
     left: 20px;
@@ -225,10 +208,8 @@
     display: flex;
     gap: 10px;
     z-index: 1000;
-    /* above content */
 }
 
-/* Small-screen tweak */
 @media (max-width: 480px) {
     .log-fab-left {
         left: 12px;
@@ -239,6 +220,16 @@
         height: 36px;
         padding: 0 14px;
         border-radius: 10px;
-
     }
+}
+
+.danger-btn {
+    color: #ff6666;
+    border-color: #ff6666;
+}
+
+.danger-btn:hover {
+    color: #ff0000;
+    border-color: #ff0000;
+    cursor: pointer;
 }
