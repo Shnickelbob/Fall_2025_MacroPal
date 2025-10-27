@@ -5,7 +5,6 @@
  * @version October 11, 2025
 */
 
-/* Whole search row: input + menu + button in one line */
 .search-row {
     display: flex;
     align-items: center;
@@ -13,7 +12,6 @@
     margin-bottom: 16px;
 }
 
-/* The connected input + menu container */
 .search-group {
     display: flex;
     align-items: center;
@@ -26,7 +24,6 @@
     height: 56px;
 }
 
-/* The text box where you type */
 .search-input {
     flex: 1 1 auto;
     min-width: 520px;
@@ -38,12 +35,10 @@
     outline: none;
 }
 
-/* Placeholder text color */
 .search-input::placeholder {
     color: #9aa0a6;
 }
 
-/* The standalone Search button on the right */
 .search-button {
     height: 56px;
     padding: 0 24px;
@@ -56,21 +51,22 @@
     border: 1px solid #2a2a2a;
     border-radius: 16px;
     cursor: pointer;
-    transition: background .15s ease, transform .02s ease, border-color .15s ease;
+    transition: color .15s ease, transform .02s ease;
 }
 
-/* Button hover effect */
 .search-button:hover {
-    background: #262626;
-    border-color: #353535;
+    color: #6d72ff;
 }
 
-/* Button press effect */
+.search-button:focus-visible {
+    outline: none;
+    color: #6d72ff;
+}
+
 .search-button:active {
     transform: translateY(1px);
 }
 
-/* The clickable “Name/Tags” pill attached to the input */
 .search-select2 {
     position: relative;
     display: flex;
@@ -87,14 +83,14 @@
     cursor: pointer;
     user-select: none;
     outline: none;
+    transition: color .15s ease;
 }
 
-/* Remove default focus glow */
-.search-select2:focus {
-    box-shadow: none;
+.search-select2:hover,
+.search-select2:focus-visible {
+    color: #6d72ff;
 }
 
-/* The little chevron icon on the right */
 .search-select2 .chev {
     position: absolute;
     right: 14px;
@@ -102,12 +98,10 @@
     pointer-events: none;
 }
 
-/* The text inside the pill */
 .search-select2 .label {
     pointer-events: none;
 }
 
-/* The dropdown menu that appears under the pill */
 .search-menu {
     position: absolute;
     top: calc(100% + 6px);
@@ -123,7 +117,6 @@
     z-index: 50;
 }
 
-/* Each option in the menu */
 .search-item {
     display: block;
     padding: 10px 12px;
@@ -131,23 +124,19 @@
     color: #e8e8e8;
 }
 
-/* Hover effect for menu items */
 .search-item:hover {
     background: #232323;
 }
 
-/* “Selected” look in the menu */
 .search-item[aria-selected="true"] {
     background: #202020;
 }
 
-/* Header area above the search bar (title + subtitle + line) */
 .intro {
     margin: 56px auto 20px;
     text-align: center;
 }
 
-/* Big page title */
 .intro-title {
     margin: 12px 0 8px;
     font-weight: 800;
@@ -155,7 +144,6 @@
     font-size: clamp(28px, 6vw, 56px);
 }
 
-/* Gradient text effect for the title */
 .intro-accent {
     background: linear-gradient(90deg, #8ab4ff, #b388ff 60%, #ffd4a3);
     -webkit-background-clip: text;
@@ -163,7 +151,6 @@
     color: transparent;
 }
 
-/* Small gray subtitle under the title */
 .intro-subtitle {
     margin: 0 auto;
     max-width: 680px;
@@ -171,11 +158,100 @@
     font-size: 15px;
 }
 
-/* Thin line under the subtitle */
 .intro-divider {
     height: 1px;
     margin: 24px auto 8px;
     width: min(92%, 900px);
     background: linear-gradient(90deg, transparent, #2a2a2a, transparent);
     border-radius: 999px;
+}
+
+.search-button:not(.danger-btn):hover,
+.search-button:not(.danger-btn):focus-visible {
+    border-color: #2a2a2a !important;
+}
+
+.search-select2:hover,
+.search-select2:focus-visible {
+    border-color: #262626 !important;
+}
+
+.search-item:hover {
+    background: #232323;
+    color: #6d72ff;
+}
+
+.search-card {
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 16px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    transition: background .15s ease, border-color .15s ease, transform .02s ease;
+}
+
+.search-card:hover {
+    background: #262626;
+    border-color: #353535;
+}
+
+.search-card:active {
+    transform: translateY(1px);
+}
+
+.search-name {
+    font-weight: 600;
+    color: #f3f3f3;
+    text-align: left;
+}
+
+.search-stats {
+    font-size: 14px;
+    color: #e0e0e0;
+    opacity: .9;
+}
+
+.search-log-btn {
+    height: 34px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #f3f3f3;
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, transform .02s ease, color .15s ease;
+}
+
+.search-log-btn:hover {
+    background: #262626;
+    border-color: #353535;
+    color: #6d72ff;
+}
+
+.search-log-btn:active {
+    transform: translateY(1px);
+}
+
+.search-log-btn:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+.danger-btn {
+    color: #ff6666;
+    border-color: #ff6666;
+}
+
+.danger-btn:hover,
+.danger-btn:focus-visible {
+    color: #ff0000;
+    border-color: #ff0000 !important;
+    background: #161616;
 }
