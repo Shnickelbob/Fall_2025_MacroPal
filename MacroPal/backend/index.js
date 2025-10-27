@@ -83,6 +83,15 @@ app.get("/api/health", async (_req, res) => {
 app.post("/api/register", async (req, res) => {
   try {
     const { username, password } = req.body;
+    
+    if(username.length<8 || username.length>16){
+      return res.send(`Username must be between 8-16 characters`);
+    }
+
+    if(password.length<8 || password.length>16 || password.search(/[!@#$%^&*0-9]/) === -1 || password.search(/[A-Z]/) === -1){
+      return res.send(`Password must be between 8-16 characters, contain an uppercase character, and contain a number or special character`);
+    }
+
     if (await user.registerNewUser(username, password)) {
       return res.send(`User ${username} registered`);
     }

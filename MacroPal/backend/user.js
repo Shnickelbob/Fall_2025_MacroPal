@@ -32,6 +32,7 @@ const AuthUser =
 
 // Register a new user (returns true if created, false if username exists)
 export const registerNewUser = async (user, pass) => {
+  
   const exists = await AuthUser.findOne({ username: user }).lean();
   if (exists) return false;
 

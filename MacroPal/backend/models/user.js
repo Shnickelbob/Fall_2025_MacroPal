@@ -23,14 +23,17 @@ const userSchema = new mongoose.Schema({ // creates a schema for a user
         required: true, // every user must have a screen name
         unique: true, // only one user can use the screen name
         trim: true,
-        minlength: 2,
-        maxlength: 40,
+        minlength: 8,
+        maxlength: 16,
         match: /^[A-Za-z0-9_.-]+$/, // alphanumeric screen name that allows underscores, periods, and hyphens
     },
 
     Password: {
         type: String,
         required: true,
+        minlength: 8,
+        maxlength: 16,
+        match: /^[A-Za-z0-9_.-]+$/, // alphanumeric password that allows underscores, periods, and hyphens
     },
 
     // Logs_Ids: [
@@ -46,6 +49,14 @@ const userSchema = new mongoose.Schema({ // creates a schema for a user
     logged food items.
     */
     Log: [
+        {
+            type:mongoose.Schema.Types.ObjectId,
+            ref: "Food", // Linker
+        }
+    ],
+
+    // List of favorited/saved food items:
+    Saved_Foods: [
         {
             type:mongoose.Schema.Types.ObjectId,
             ref: "Food", // Linker
