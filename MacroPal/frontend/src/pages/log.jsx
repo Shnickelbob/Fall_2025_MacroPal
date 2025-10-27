@@ -134,10 +134,10 @@ export default function DailyLog() {
                 <div className="log-summary-title">Daily Summary</div>
                 <div className="log-summary-rows">
                     <div>
-                        <b>Daily Total:</b> Calories {Math.round(Number(totals.cal) || 0)} kcal • Proteins {Math.round(Number(totals.protein) || 0)}g • Fats {Math.round(Number(totals.fat) || 0)}g • Carbs {Math.round(Number(totals.carbs) || 0)}g
+                        <b>Daily Goal:</b> Calories {Number(goals.cal) || 0} kcal • Proteins {Number(goals.protein) || 0}g • Fats {Number(goals.fat) || 0}g • Carbs: {Number(goals.carbs) || 0}g
                     </div>
                     <div>
-                        <b>Daily Goal:</b> Calories {Number(goals.cal) || 0} kcal • Proteins {Number(goals.protein) || 0}g • Fats {Number(goals.fat) || 0}g • Carbs {Number(goals.carbs) || 0}g
+                        <b>Daily Total:</b> Calories {Math.round(Number(totals.cal) || 0)} kcal • Proteins {Math.round(Number(totals.protein) || 0)}g • Fats {Math.round(Number(totals.fat) || 0)}g • Carbs: {Math.round(Number(totals.carbs) || 0)}g
                     </div>
                 </div>
             </div>
@@ -167,7 +167,7 @@ export default function DailyLog() {
                                     </div>
                                     <button
                                         type="button"
-                                        className="log-remove"
+                                        className="log-remove danger-btn"
                                         onClick={() => removeOne(item._id)}
                                         aria-label={`Remove ${item.name}`}
                                     >
@@ -191,6 +191,11 @@ export default function DailyLog() {
                     zIndex: 1000
                 }}
             >
+                <Link to="/homepage" className="pill-btn">Home</Link>
+
+                {items.length > 0 && (
+                    <Link to="/search" className="pill-btn">Find Food</Link>
+                )}
             </div>
         </div>
     );

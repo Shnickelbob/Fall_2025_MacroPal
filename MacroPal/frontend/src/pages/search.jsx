@@ -11,11 +11,12 @@
   
   @author Brian Schaeffer
   @version October 11, 2025
-*/
+ */
 
 import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import './search.css';
+import { Link } from "react-router-dom";
 
 export default function Search() {
   // core search state
@@ -31,17 +32,20 @@ export default function Search() {
   // prevent spam on the “Log” button
   const [loggingId, setLoggingId] = useState(null);
 
-  // smoother typing -> fewer requests
+  // smoother typing means fewer requests
   const debouncedSearch = useDebounce(userSearch, 250);
 
   // tiny dropdown for Name/Tags
   const [menuOpen, setMenuOpen] = useState(false);
 
   // run the search
-  async function runSearch() {
+  async function runSearch(overrideText) {
     setSubmitted(true);
     setError('');
-    const trimmedSearch = debouncedSearch.trim();
+
+    const raw = typeof overrideText === 'string' ? overrideText : debouncedSearch;
+    const trimmedSearch = (raw || '').trim();
+
     if (!trimmedSearch) {
       setResults([]);
       return;
@@ -65,7 +69,7 @@ export default function Search() {
 
   // log one item using POST /api/log (cookie session)
   async function logFood(food) {
-    if (loggingId) return; // soft lock
+    if (loggingId) return; // avoids double taps
     setLoggingId(food._id);
 
     try {
@@ -100,9 +104,21 @@ export default function Search() {
     }
   }
 
-  // Enter to search
+  function clearSearch() {
+    setUserSearch("");
+    setResults([]);
+    setError("");
+    setSubmitted(false);
+  }
+
   function onKeyDown(event) {
-    if (event.key === 'Enter') runSearch();
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      const el = event.currentTarget;
+      setTimeout(() => {
+        runSearch(el.value);
+      }, 0);
+    }
   }
 
   return (
@@ -113,7 +129,9 @@ export default function Search() {
           0%   { filter: hue-rotate(0deg); }
           100% { filter: hue-rotate(360deg); }
         }
-        .hue-anim { animation: hueShift 16s linear infinite; }
+        .hue-anim {
+          animation: hueShift 16s linear infinite;
+        }
       `}</style>
 
       {/* page header */}
@@ -189,10 +207,23 @@ export default function Search() {
           </div>
         </div>
 
-        {/* go search */}
-        <button onClick={runSearch} className="search-button">
+        {/* submits the users input */}
+        <button onClick={() => runSearch(userSearch)} className="search-button">
           Search
         </button>
+
+        {/* clears the input and results */}
+        {/* only shows Clear if there's text or results */}
+        {(userSearch.trim() || results.length > 0) && (
+          <button
+            type="button"
+            onClick={clearSearch}
+            className="search-button danger-btn"
+            style={{ marginLeft: '8px' }}
+          >
+            Clear
+          </button>
+        )}
       </div>
 
       {/* results / feedback */}
@@ -205,40 +236,20 @@ export default function Search() {
             {results.map((foodItem) => {
               const disabled = loggingId === foodItem._id;
               return (
-                <div
-                  key={foodItem._id}
-                  style={{
-                    border: '1px solid #eee',
-                    borderRadius: 10,
-                    padding: 12,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
+                <div key={foodItem._id} className="search-card">
                   <div>
-                    <div style={{ fontWeight: 600 }}>{foodItem.name}</div>
-                    <div style={{ fontSize: 14, opacity: 0.85 }}>
-                      Calories: {foodItem.calories ?? 0} | Protein: {foodItem.protein ?? 0}g | Fat:{' '}
-                      {foodItem.fat ?? 0}g | Carbs: {foodItem.carbs ?? 0}g
+                    <div className="search-name">{foodItem.name}</div>
+                    <div className="search-stats">
+                      Calories: {foodItem.calories ?? 0} | Protein: {foodItem.protein ?? 0}g | Fat {foodItem.fat ?? 0}g | Carbs: {foodItem.carbs ?? 0}g
                     </div>
                   </div>
 
-                  {/* log to today */}
                   <button
                     type="button"
                     onClick={() => logFood(foodItem)}
                     aria-label={`Log ${foodItem.name}`}
                     disabled={disabled}
-                    style={{
-                      padding: '6px 10px',
-                      borderRadius: 8,
-                      border: '1px solid #ddd',
-                      background: 'transparent',
-                      color: '#ffffff',
-                      cursor: disabled ? 'not-allowed' : 'pointer',
-                      opacity: disabled ? 0.6 : 1,
-                    }}
+                    className="search-log-btn"
                   >
                     {disabled ? 'Logging…' : 'Log'}
                   </button>
@@ -246,7 +257,6 @@ export default function Search() {
               );
             })}
 
-            {/* if we tried and came up empty */}
             {!loading && !error && results.length === 0 && userSearch.trim() && (
               <div>No matches</div>
             )}
@@ -254,6 +264,20 @@ export default function Search() {
         </>
       )}
 
+      {/* Button link on the lower left side for easy navigation to the Daily Log page */}
+      <div
+        style={{
+          position: "fixed",
+          left: 20,
+          bottom: 20,
+          display: "flex",
+          gap: 10,
+          zIndex: 1000
+        }}
+      >
+        <Link to="/homepage" className="pill-btn">Home</Link>
+        <Link to="/log" className="pill-btn">Daily Log</Link>
+      </div>
     </div>
   );
 }
