@@ -17,12 +17,15 @@ import ModalAddRecipe from "../Components/ModalAddRecipe";
 import { Link } from "react-router-dom";
 import { fetchToday } from "../api/log";
 import { patchGoals /* getGoals */ } from "../api/user";
+import { FaStar } from "react-icons/fa";
+import ModalSavedFoods from "../Components/ModalSavedFoods";
 
 function HomePage() {
   // modals
   const [showAddFood, setShowAddFood] = useState(false);
   const [showAddRecipe, setShowAddRecipe] = useState(false);
   const [showEditGoals, setShowEditGoals] = useState(false);
+  const [showSavedFoods, setShowSavedFoods] = useState(false);
 
   // header name
   const [screenName, setScreenName] = useState("User");
@@ -221,6 +224,17 @@ function HomePage() {
         <FaMagnifyingGlass />
       </button>
 
+      {/* Favorites */}
+      <button
+        title="View saved foods"
+        className="mp-btn-homepage"
+        style={{ position: "absolute", bottom: 20, right: 120 }}
+        onClick={() => setShowSavedFoods(true)}
+      >
+        <FaStar />
+      </button>
+
+
       {/* Daily log link */}
       <Link
         to="/log"
@@ -250,6 +264,17 @@ function HomePage() {
           initialGoals={today?.goals}
         />
       )}
+      {showSavedFoods && (
+        <ModalSavedFoods
+          open={showSavedFoods}
+          setOpen={setShowSavedFoods}
+          // TODO: Replace this static list with data fetched from the backend
+          items={[
+            { _id: "1", name: "Grilled Chicken", calories: 220, protein: 40, fat: 5, carbs: 0 },
+            { _id: "2", name: "Banana", calories: 90, protein: 1, fat: 0, carbs: 23 },
+            { _id: "3", name: "Greek Yogurt", calories: 130, protein: 12, fat: 4, carbs: 9 }
+          ]}
+          onLog={(food) => console.log("Log clicked for:", food)}
       {showAddRecipe && (
         <ModalAddRecipe
           open={showAddRecipe}
