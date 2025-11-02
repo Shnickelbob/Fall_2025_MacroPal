@@ -275,6 +275,8 @@ function HomePage() {
             { _id: "3", name: "Greek Yogurt", calories: 130, protein: 12, fat: 4, carbs: 9 }
           ]}
           onLog={(food) => console.log("Log clicked for:", food)}
+          />
+        )}
       {showAddRecipe && (
         <ModalAddRecipe
           open={showAddRecipe}
