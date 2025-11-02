@@ -9,9 +9,11 @@ import "../App.css";
 import { FaPlus, FaList } from "react-icons/fa";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import { BsPencilFill } from "react-icons/bs";
+import { GiKnifeFork } from "react-icons/gi";
 import ProgressBar from "../Components/ProgressBar";
 import ModalAddFood from "../Components/ModalAddFood";
 import ModalGoalVals from "../Components/ModalGoalVals";
+import ModalAddRecipe from "../Components/ModalAddRecipe";
 import { Link } from "react-router-dom";
 import { fetchToday } from "../api/log";
 import { patchGoals /* getGoals */ } from "../api/user";
@@ -21,6 +23,7 @@ import ModalSavedFoods from "../Components/ModalSavedFoods";
 function HomePage() {
   // modals
   const [showAddFood, setShowAddFood] = useState(false);
+  const [showAddRecipe, setShowAddRecipe] = useState(false);
   const [showEditGoals, setShowEditGoals] = useState(false);
   const [showSavedFoods, setShowSavedFoods] = useState(false);
 
@@ -191,6 +194,16 @@ function HomePage() {
         <BsPencilFill />
       </button>
 
+      {/* Add Recipe */}
+      <button
+        title="Add Recipe"
+        className="mp-btn-homepage"
+        style={{ position: "absolute", top: 20, right: 70 }}
+        onClick={() => setShowAddRecipe(true)}
+      >
+        <GiKnifeFork />
+      </button>
+
       {/* Add food */}
       <button
         title="Add food to the database"
@@ -262,6 +275,11 @@ function HomePage() {
             { _id: "3", name: "Greek Yogurt", calories: 130, protein: 12, fat: 4, carbs: 9 }
           ]}
           onLog={(food) => console.log("Log clicked for:", food)}
+      {showAddRecipe && (
+        <ModalAddRecipe
+          open={showAddRecipe}
+          setOpen={setShowAddRecipe}
+          // onSubmit={handleRecipeSubmit}
         />
       )}
     </div>
