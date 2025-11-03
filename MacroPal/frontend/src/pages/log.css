@@ -233,3 +233,55 @@
     border-color: #ff0000;
     cursor: pointer;
 }
+
+.log-card.selected {
+    background: #161616;
+    border: 1px solid #ff0000;
+    transition: background 0.2s ease, border 0.2s ease;
+}
+
+.pill-btn.logall-btn {
+    background: #6d72ff1a;
+    border: 1px solid #ff6666;
+    color: #ff6666;
+}
+
+.pill-btn.logall-btn:hover {
+    background: #262626;
+    color: #ff0000;
+    border-color: #ff0000;
+    cursor: pointer;
+}
+
+.pill-btn.logall-btn:focus-visible {
+    color: #ff0000;
+    border-color: #353535;
+}
+
+.pill-btn.removeall-btn {
+    background: #161616;
+    border: 1px solid #ff6666;
+    color: #ff6666;
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 12px;
+}
+
+.pill-btn.removeall-btn:hover {
+    background: #2b0b0b;
+    border-color: #ff0000;
+    color: #ff0000;
+    transform: translateY(-1px);
+}
+
+.pill-btn.removeall-btn:active {
+    background: #200808;
+    border-color: #cc0000;
+    color: #ff5555;
+    transform: translateY(0);
+}
+
+.pill-btn.removeall-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 102, 102, .3);
+}
