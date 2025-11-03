@@ -12,6 +12,7 @@ import searchRouter from "./routes/search.js";
 import logRouter from "./routes/log.js";
 import userRoutes from "./routes/user.js";
 import Food from "./models/food.js";
+import savedRoutes from "./routes/saved.js";
 
 dotenv.config();
 
@@ -83,12 +84,12 @@ app.get("/api/health", async (_req, res) => {
 app.post("/api/register", async (req, res) => {
   try {
     const { username, password } = req.body;
-    
-    if(username.length<8 || username.length>16){
+
+    if (username.length < 8 || username.length > 16) {
       return res.send(`Username must be between 8-16 characters`);
     }
 
-    if(password.length<8 || password.length>16 || password.search(/[!@#$%^&*0-9]/) === -1 || password.search(/[A-Z]/) === -1){
+    if (password.length < 8 || password.length > 16 || password.search(/[!@#$%^&*0-9]/) === -1 || password.search(/[A-Z]/) === -1) {
       return res.send(`Password must be between 8-16 characters, contain an uppercase character, and contain a number or special character`);
     }
 
@@ -133,6 +134,9 @@ app.use("/api/search", searchRouter);
 app.use("/api/user", requireUser, userRoutes);
 app.use("/api/log", requireUser, logRouter);
 console.log("[index.js] mounted /api/user and /api/log as protected");
+
+// Mount saved routes
+app.use("/api/saved", savedRoutes);
 
 // Example food creation (left public as before)
 app.post("/api/foods", async (req, res) => {
