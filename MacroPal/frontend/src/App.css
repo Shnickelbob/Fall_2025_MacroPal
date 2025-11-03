@@ -1,5 +1,9 @@
+/* Adding fonts */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Squada+One&display=swap');
+
 /* Reset */
 body, #root {
+  font-family: "Montserrat", sans-serif;
   max-width: 100%;
   margin: 0 auto;
   padding: 0;
@@ -9,8 +13,8 @@ body, #root {
 /* ----- MacroPal theme ----- */
 .mp-page {
   background: #242424;
-  color: white;
-  font-family: system-ui, sans-serif;
+  color: #f7E9E9;
+  font-family: "Montserrat", sans-serif;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
