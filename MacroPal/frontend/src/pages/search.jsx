@@ -14,7 +14,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Star } from 'lucide-react';
 import './search.css';
 import { Link } from "react-router-dom";
 
@@ -32,11 +32,36 @@ export default function Search() {
   // prevent spam on the “Log” button
   const [loggingId, setLoggingId] = useState(null);
 
-  // smoother typing means fewer requests
+  // smoother typing
   const debouncedSearch = useDebounce(userSearch, 250);
 
   // tiny dropdown for Name/Tags
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // saved (star) state
+  const [savedIds, setSavedIds] = useState(new Set());
+
+  // selected cards for multi-log
+  const [selectedIds, setSelectedIds] = useState(new Set());
+
+  // load saved foods once
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/saved', {
+          headers: { 'x-user-id': localStorage.getItem('mp_user_id') || '' },
+          credentials: 'include',
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const ids = new Set((data?.saved || []).map(f => f._id));
+        setSavedIds(ids);
+      } catch {
+        console.error('Failed to fetch saved items:', err);
+        setSavedIds(new Set()); // reset to empty if it fails to fetch
+      }
+    })();
+  }, []);
 
   // run the search
   async function runSearch(overrideText) {
@@ -104,11 +129,55 @@ export default function Search() {
     }
   }
 
+  // toggle card selection
+  function toggleSelect(foodId) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(foodId)) next.delete(foodId);
+      else next.add(foodId);
+      return next;
+    });
+  }
+
+  // log all selected foods
+  async function logAllSelected() {
+    const selected = results.filter(f => selectedIds.has(f._id));
+    if (selected.length === 0) return;
+
+    try {
+      for (const food of selected) {
+        const payload = {
+          foodId: food._id,
+          name: food.name ?? food.Name ?? 'Unnamed',
+          cal: food.calories ?? food.Calories ?? 0,
+          protein: food.protein ?? food.Protein ?? 0,
+          carbs: food.carbs ?? food.Carbs ?? 0,
+          fat: food.fat ?? food.Fat ?? 0,
+          qty: 1,
+        };
+
+        await fetch('http://localhost:5000/api/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload),
+        });
+      }
+
+      alert(`${selected.length} item(s) logged successfully!`);
+      window.location.href = '/log';
+    } catch (err) {
+      console.error(err);
+      alert('Failed to log selected items.');
+    }
+  }
+
   function clearSearch() {
     setUserSearch("");
     setResults([]);
     setError("");
     setSubmitted(false);
+    setSelectedIds(new Set());
   }
 
   function onKeyDown(event) {
@@ -121,15 +190,58 @@ export default function Search() {
     }
   }
 
+  // toggle save/unsave for a food item
+  async function toggleSave(food) {
+    const id = food._id;
+    const wasSaved = savedIds.has(id);
+
+    // temporary local update
+    setSavedIds(prev => {
+      const next = new Set(prev);
+      if (wasSaved) next.delete(id); else next.add(id);
+      return next;
+    });
+
+    try {
+      if (wasSaved) {
+        const r = await fetch(`http://localhost:5000/api/saved/${id}`, {
+          method: 'DELETE',
+          headers: { 'x-user-id': localStorage.getItem('mp_user_id') || '' },
+          credentials: 'include'
+        });
+        if (!r.ok && r.status !== 204) throw new Error();
+      } else {
+        const r = await fetch('http://localhost:5000/api/saved', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': localStorage.getItem('mp_user_id') || ''
+          },
+          credentials: 'include',
+          body: JSON.stringify({ foodId: id })
+        });
+        if (!r.ok) throw new Error();
+      }
+    } catch {
+      // rollback on failure
+      setSavedIds(prev => {
+        const next = new Set(prev);
+        if (wasSaved) next.add(id); else next.delete(id);
+        return next;
+      });
+      alert(wasSaved ? "Couldn't remove from saved." : "Couldn't save item.");
+    }
+  }
+
   return (
-    <div style={{ maxWidth: 760, margin: '24px auto', padding: '0 16px' }}>
+    <div className="search-page" style={{ maxWidth: 760, margin: '24px auto', padding: '0 16px' }}>
       {/* slow rainbow title animation */}
       <style>{`
         @keyframes hueShift {
           0%   { filter: hue-rotate(0deg); }
           100% { filter: hue-rotate(360deg); }
         }
-        .hue-anim {
+        .search-page .hue-anim {
           animation: hueShift 16s linear infinite;
         }
       `}</style>
@@ -154,7 +266,6 @@ export default function Search() {
       {/* search row */}
       <div className="search-row">
         <div className="search-group">
-          {/* text input */}
           <input
             value={userSearch}
             onChange={(event) => setUserSearch(event.target.value)}
@@ -164,7 +275,6 @@ export default function Search() {
             className="search-input"
           />
 
-          {/* Name/Tags pill */}
           <div
             className={`search-select2${menuOpen ? ' open' : ''}`}
             tabIndex={0}
@@ -207,13 +317,10 @@ export default function Search() {
           </div>
         </div>
 
-        {/* submits the users input */}
         <button onClick={() => runSearch(userSearch)} className="search-button">
           Search
         </button>
 
-        {/* clears the input and results */}
-        {/* only shows Clear if there's text or results */}
         {(userSearch.trim() || results.length > 0) && (
           <button
             type="button"
@@ -235,8 +342,45 @@ export default function Search() {
           <div style={{ display: 'grid', gap: 10 }}>
             {results.map((foodItem) => {
               const disabled = loggingId === foodItem._id;
+              const isSaved = savedIds.has(foodItem._id);
+              const isSelected = selectedIds.has(foodItem._id);
+
               return (
-                <div key={foodItem._id} className="search-card">
+                <div
+                  key={foodItem._id}
+                  className={`search-card ${isSelected ? 'selected' : ''}`}
+                  onClick={() => toggleSelect(foodItem._id)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); toggleSave(foodItem); }}
+                    aria-label={isSaved ? "Unsave" : "Save"}
+                    style={{
+                      height: 30,
+                      width: 30,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "transparent",
+                      border: "none",
+                      borderRadius: 0,
+                      cursor: "pointer",
+                      outline: "none",
+                      transition: "transform 0.1s ease",
+                      marginRight: 8,
+                    }}
+                  >
+                    <Star
+                      className={isSaved ? "star-twinkle" : ""}
+                      size={20}
+                      stroke={isSaved ? '#FFD700' : '#888'}
+                      fill={isSaved ? '#FFD700' : 'none'}
+                      strokeWidth={2}
+                      style={{ display: 'block', flexShrink: 0 }}
+                    />
+                  </button>
+
                   <div>
                     <div className="search-name">{foodItem.name}</div>
                     <div className="search-stats">
@@ -246,7 +390,7 @@ export default function Search() {
 
                   <button
                     type="button"
-                    onClick={() => logFood(foodItem)}
+                    onClick={(e) => { e.stopPropagation(); logFood(foodItem); }}
                     aria-label={`Log ${foodItem.name}`}
                     disabled={disabled}
                     className="search-log-btn"
@@ -264,7 +408,28 @@ export default function Search() {
         </>
       )}
 
-      {/* Button link on the lower left side for easy navigation to the Daily Log page */}
+      {/* Log All Selected button */}
+      {selectedIds.size > 0 && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 20,
+            right: 20,
+            background: "transparent",
+            zIndex: 1000
+          }}
+        >
+          <button
+            type="button"
+            onClick={logAllSelected}
+            className="pill-btn logall-btn"
+          >
+            Log All Selected
+          </button>
+        </div>
+      )}
+
+      {/* Nav buttons */}
       <div
         style={{
           position: "fixed",

@@ -5,6 +5,7 @@
   - fetches today's logged items for the current user from the backend
   - shows a quick summary of totals vs goals
   - lets the user remove a single logged entry
+  - NEW: lets the user select multiple entries and remove them all at once
   - has quick links back to home and search
 
   api shape used here:
@@ -44,15 +45,17 @@ export default function DailyLog() {
       grabs today's log using the new route and normalizes numbers to be safe
       also pulls the saved screen name so the header feels personal
     */
+
+    const [selectedIds, setSelectedIds] = useState(new Set());
+
     useEffect(() => {
         (async () => {
             try {
                 setError("");
 
                 const res = await fetch("http://localhost:5000/api/log/today", {
-                    headers: {
-                        "x-user-id": localStorage.getItem("mp_user_id") || ""
-                    }
+                    headers: { "x-user-id": localStorage.getItem("mp_user_id") || "" },
+                    credentials: "include",
                 });
 
                 if (!res.ok) throw new Error("Failed to load log");
@@ -72,7 +75,10 @@ export default function DailyLog() {
                     carbs: Number(data?.goals?.carbs) || 0,
                 };
 
-                setItems(Array.isArray(data.entries) ? data.entries : []);
+                const list = Array.isArray(data.entries) ? data.entries : [];
+
+                // optimistic ui: yank it locally and recompute totals
+                setItems(list);
                 setTotals(safeTotals);
                 setGoals(safeGoals);
 
@@ -92,57 +98,123 @@ export default function DailyLog() {
       does optimistic remove first, then calls the api
       if the api fails, rolls back to previous state
     */
+    // helper to recompute totals
+    function calcTotalsNew(arr) {
+        return arr.reduce(
+            (a, e) => ({
+                cal: a.cal + (e.cal || 0) * (e.qty || 1),
+                protein: a.protein + (e.protein || 0) * (e.qty || 1),
+                fat: a.fat + (e.fat || 0) * (e.qty || 1),
+                carbs: a.carbs + (e.carbs || 0) * (e.qty || 1),
+            }),
+            { cal: 0, protein: 0, fat: 0, carbs: 0 }
+        );
+    }
+
     async function removeOne(entryId) {
         const prev = items;
-        const next = prev.filter(x => x._id !== entryId);
+        const next = prev.filter((x) => x._id !== entryId);
 
-        // optimistic ui: yank it locally and recompute totals
         setItems(next);
         setTotals(calcTotalsNew(next));
+        setSelectedIds((old) => {
+            const n = new Set(old);
+            n.delete(entryId);
+            return n;
+        });
 
         try {
             const res = await fetch(`http://localhost:5000/api/log/${entryId}`, {
                 method: "DELETE",
-                headers: {
-                    "x-user-id": localStorage.getItem("mp_user_id") || ""
-                }
+                headers: { "x-user-id": localStorage.getItem("mp_user_id") || "" },
+                credentials: "include",
             });
-            // joseph’s route returns 204 no content on success
             if (!res.ok && res.status !== 204) throw new Error("Delete failed");
         } catch (e) {
             console.error(e);
-            // backend refused? roll it back
             setItems(prev);
             setTotals(calcTotalsNew(prev));
             alert("Failed to remove item.");
         }
     }
 
+    function toggleSelect(entryId) {
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(entryId)) next.delete(entryId);
+            else next.add(entryId);
+            return next;
+        });
+    }
+
+    async function removeAllSelected() {
+        if (selectedIds.size === 0) return;
+
+        const idsToRemove = Array.from(selectedIds);
+        const prev = items;
+
+        const next = prev.filter((x) => !selectedIds.has(x._id));
+        setItems(next);
+        setTotals(calcTotalsNew(next));
+        setSelectedIds(new Set());
+
+        const failures = [];
+        for (const id of idsToRemove) {
+            try {
+                const res = await fetch(`http://localhost:5000/api/log/${id}`, {
+                    method: "DELETE",
+                    headers: { "x-user-id": localStorage.getItem("mp_user_id") || "" },
+                    credentials: "include",
+                });
+                if (!res.ok && res.status !== 204) failures.push(id);
+            } catch {
+                failures.push(id);
+            }
+        }
+
+        if (failures.length) {
+            const restored = [
+                ...next,
+                ...prev.filter((x) => failures.includes(x._id)),
+            ];
+            setItems(restored);
+            setTotals(calcTotalsNew(restored));
+            alert(`Some items could not be removed (${failures.length}).`);
+        }
+    }
+
     return (
         <div className="log-container">
-            {/* page header section with friendly intro */}
+            {/* header */}
             <div className="intro">
                 <h1 className="intro-title intro-accent hue-anim">
                     {screenName}'s Daily Log
                 </h1>
-                <p className="intro-subtitle">Remove items you don't want to keep in today's log</p>
+                <p className="intro-subtitle">
+                    Remove items you don't want to keep in today's log
+                </p>
                 <div className="intro-divider" />
             </div>
 
-            {/* summary card shows current totals against user goals */}
+            {/* summary */}
             <div className="log-summary">
                 <div className="log-summary-title">Daily Summary</div>
                 <div className="log-summary-rows">
                     <div>
-                        <b>Daily Goal:</b> Calories {Number(goals.cal) || 0} kcal • Proteins {Number(goals.protein) || 0}g • Fats {Number(goals.fat) || 0}g • Carbs: {Number(goals.carbs) || 0}g
+                        <b>Daily Goal:</b> Calories {Number(goals.cal) || 0} kcal • Proteins{" "}
+                        {Number(goals.protein) || 0}g • Fats {Number(goals.fat) || 0}g •
+                        Carbs: {Number(goals.carbs) || 0}g
                     </div>
                     <div>
-                        <b>Daily Total:</b> Calories {Math.round(Number(totals.cal) || 0)} kcal • Proteins {Math.round(Number(totals.protein) || 0)}g • Fats {Math.round(Number(totals.fat) || 0)}g • Carbs: {Math.round(Number(totals.carbs) || 0)}g
+                        <b>Daily Total:</b> Calories {Math.round(Number(totals.cal) || 0)}{" "}
+                        kcal • Proteins {Math.round(Number(totals.protein) || 0)}g • Fats{" "}
+                        {Math.round(Number(totals.fat) || 0)}g • Carbs:{" "}
+                        {Math.round(Number(totals.carbs) || 0)}g
                     </div>
                 </div>
             </div>
 
-            {/* core section with loading, error, empty, and list states */}
+            {/* body states */}
             {loading && <div>Loading…</div>}
             {error && <div style={{ color: "crimson" }}>{error}</div>}
 
@@ -152,35 +224,72 @@ export default function DailyLog() {
                         <div className="empty-state">
                             <div className="empty-title">No items logged yet.</div>
                             <div className="empty-actions">
-                                <Link to="/search" className="pill-btn">Search &amp; Log Foods</Link>
+                                <Link to="/search" className="pill-btn">
+                                    Search &amp; Log Foods
+                                </Link>
                             </div>
                         </div>
                     ) : (
                         <div className="log-list">
-                            {items.map(item => (
-                                <div key={item._id} className="log-card">
-                                    <div>
-                                        <div className="log-name">{item.name}</div>
-                                        <div className="log-stats">
-                                            Calories: {item.cal ?? 0} | Protein: {item.protein ?? 0}g | Fat: {item.fat ?? 0}g | Carbs: {item.carbs ?? 0}g{item.qty > 1 ? ` × ${item.qty}` : ""}
-                                        </div>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        className="log-remove danger-btn"
-                                        onClick={() => removeOne(item._id)}
-                                        aria-label={`Remove ${item.name}`}
+                            {items.map((item) => {
+                                const isSelected = selectedIds.has(item._id);
+                                return (
+                                    <div
+                                        key={item._id}
+                                        className={`log-card ${isSelected ? "selected" : ""}`}
+                                        onClick={() => toggleSelect(item._id)}
+                                        style={{ cursor: "pointer" }}
                                     >
-                                        Remove
-                                    </button>
-                                </div>
-                            ))}
+                                        <div>
+                                            <div className="log-name">{item.name}</div>
+                                            <div className="log-stats">
+                                                Calories: {item.cal ?? 0} | Protein: {item.protein ?? 0}
+                                                g | Fat: {item.fat ?? 0}g | Carbs: {item.carbs ?? 0}g
+                                                {item.qty > 1 ? ` × ${item.qty}` : ""}
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="log-remove danger-btn"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeOne(item._id);
+                                            }}
+                                            aria-label={`Remove ${item.name}`}
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </>
             )}
 
-            {/* handy links on the bottom left so navigation stays easy */}
+            {/* Bottom-right "Remove All Selected" (appears when any selected) */}
+            {selectedIds.size > 0 && (
+                <div
+                    style={{
+                        position: "fixed",
+                        bottom: 20,
+                        right: 20,
+                        background: "transparent",
+                        zIndex: 1000,
+                    }}
+                >
+                    <button
+                        type="button"
+                        onClick={removeAllSelected}
+                        className="pill-btn removeall-btn"
+                        title="Remove all selected items"
+                    >
+                        Remove All Selected
+                    </button>
+                </div>
+            )}
+
+            {/* Bottom-left nav buttons */}
             <div
                 style={{
                     position: "fixed",
@@ -188,29 +297,16 @@ export default function DailyLog() {
                     bottom: 20,
                     display: "flex",
                     gap: 10,
-                    zIndex: 1000
+                    zIndex: 1000,
                 }}
             >
-                <Link to="/homepage" className="pill-btn">Home</Link>
-
-                {items.length > 0 && (
-                    <Link to="/search" className="pill-btn">Find Food</Link>
-                )}
+                <Link to="/homepage" className="pill-btn">
+                    Home
+                </Link>
+                <Link to="/search" className="pill-btn">
+                    Find Food
+                </Link>
             </div>
         </div>
     );
-}
-
-/*
-  helper to recompute totals from an array of entries
-  respects per entry qty if present
-  keeps all math guarded so nulls or missing fields do not explode
-*/
-function calcTotalsNew(arr) {
-    return arr.reduce((a, e) => ({
-        cal: a.cal + (e.cal || 0) * (e.qty || 1),
-        protein: a.protein + (e.protein || 0) * (e.qty || 1),
-        fat: a.fat + (e.fat || 0) * (e.qty || 1),
-        carbs: a.carbs + (e.carbs || 0) * (e.qty || 1),
-    }), { cal: 0, protein: 0, fat: 0, carbs: 0 });
 }
