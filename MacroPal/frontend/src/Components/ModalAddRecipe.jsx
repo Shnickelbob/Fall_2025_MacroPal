@@ -95,7 +95,7 @@ function ModalAddRecipe({ open, setOpen, onSubmit }) {
       Description: description,
       Ingredients: ingredients,
       Directions: directions,
-      Serving: serv,
+      Servings: serv,
       Calories: cal,
       Protein: pro,
       Fat: fa,

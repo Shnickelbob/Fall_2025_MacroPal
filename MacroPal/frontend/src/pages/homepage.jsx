@@ -129,6 +129,23 @@ function HomePage() {
     }
   };
 
+  // Add recipe submit
+  const handleRecipeSubmit = async (data) => {
+    try {
+      const r = await fetch("/api/recipe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body.error || "Failed to create recipe");
+      alert(`Saved: ${body.Name}`);
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
   const allGoalsMet =
     today &&
     today.goals &&
@@ -281,7 +298,7 @@ function HomePage() {
         <ModalAddRecipe
           open={showAddRecipe}
           setOpen={setShowAddRecipe}
-          // onSubmit={handleRecipeSubmit}
+          onSubmit={handleRecipeSubmit}
         />
       )}
     </div>
