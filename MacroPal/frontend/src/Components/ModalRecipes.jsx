@@ -27,7 +27,6 @@ export default function ModalRecipes({ open, setOpen, items = [], onLog }) {
     const s = Math.max(1, Number(servings[r._id] || 1));
     setBusy(r._id);
     try {
-      // Model uses capitalized fields: Name, Calories, Protein, Fat, Carbs
       const payload = {
         foodId: r._id,
         name: r.Name,
@@ -68,7 +67,8 @@ export default function ModalRecipes({ open, setOpen, items = [], onLog }) {
           <button className="mp-btn" onClick={() => setOpen(false)} aria-label="Close">✕</button>
         </div>
 
-        <div className="mp-modal-body" style={{ overflow: "auto", paddingBottom: 8 }}>
+        {/* add 'search-page' so the saved/search card styles apply */}
+        <div className="mp-modal-body search-page" style={{ overflow: "auto", paddingBottom: 8 }}>
           <div style={{ display: "grid", gap: 10 }}>
             {items.length === 0 && <div>No recipes found.</div>}
             {items.map((r) => (
@@ -88,8 +88,16 @@ export default function ModalRecipes({ open, setOpen, items = [], onLog }) {
                       const v = e.target.value;
                       setServings((prev) => ({ ...prev, [r._id]: v }));
                     }}
-                    style={{ width: 64, height: 32, background: "#161616", color: "#f3f3f3", border: "1px solid #2a2a2a", borderRadius: 8, padding: "0 8px" }}
                     aria-label="Servings"
+                    style={{
+                      width: 64,
+                      height: 35,
+                      background: "#161616",
+                      color: "#f3f3f3",
+                      border: "1px solid #2a2a2a",
+                      borderRadius: 10,
+                      padding: "0 10px"
+                    }}
                   />
                   <button
                     type="button"
