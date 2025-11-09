@@ -8,6 +8,7 @@
 
 import express from "express";
 import Food from "../models/food.js";
+import Recipe from '../models/recipe.js';
 
 const router = express.Router();
 
@@ -15,7 +16,7 @@ const router = express.Router();
 router.get("/", async (req, res) => {
     try {
         // Read search settings from the URL
-        const { by = "name", userSearch = "", limit = "25" } = req.query;
+        const { by = "name", userSearch = "", limit = "25", type = "foods" } = req.query;
 
         // If there’s no search text, send back an empty list
         if (!userSearch || !userSearch.trim()) return res.json([]);
@@ -23,6 +24,32 @@ router.get("/", async (req, res) => {
         // Make sure the number of results stays between 1 and 50
         const maxResults = Math.max(1, Math.min(parseInt(limit, 10) || 25, 50));
 
+        // --- NEW: recipes branch (minimal, in-scope) ---
+        if (type === "recipes") {
+            const namePattern = new RegExp(userSearch, "i"); // case-insensitive search by Name
+            const recipeFilter = { Name: { $regex: namePattern } };
+
+            const matchingRecipes = await Recipe.find(recipeFilter)
+                .select("Name Servings Calories Protein Fat Carbs")
+                .limit(maxResults)
+                .lean();
+
+            const recipeResults = matchingRecipes.map(r => ({
+                _id: r._id,
+                name: r.Name,
+                servings: r.Servings,
+                calories: r.Calories ?? 0,
+                protein: r.Protein ?? 0,
+                fat: r.Fat ?? 0,
+                carbs: r.Carbs ?? 0,
+                tags: [],            // tags not in model yet; placeholder for UI
+                type: "recipe"       // critical so UI renders as recipe
+            }));
+
+            return res.json(recipeResults);
+        }
+
+        // --- foods branch (existing behavior) ---
         let filter = {};
 
         // Searching by tags (like "fruit" or "protein")
@@ -46,7 +73,6 @@ router.get("/", async (req, res) => {
                 ],
             };
         }
-
 
         // Get matching foods from the database
         const matchingFoods = await Food.find(filter)

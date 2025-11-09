@@ -12,7 +12,11 @@ import searchRouter from "./routes/search.js";
 import logRouter from "./routes/log.js";
 import userRoutes from "./routes/user.js";
 import Food from "./models/food.js";
+import Recipe from "./models/recipe.js";
 import savedRoutes from "./routes/saved.js";
+
+// ✅ NEW: mount recipes routes
+import recipesRoutes from "./routes/recipes.js";
 
 dotenv.config();
 
@@ -135,8 +139,11 @@ app.use("/api/user", requireUser, userRoutes);
 app.use("/api/log", requireUser, logRouter);
 console.log("[index.js] mounted /api/user and /api/log as protected");
 
-// Mount saved routes
+// Saved routes (internal auth check is inside savedRoutes)
 app.use("/api/saved", savedRoutes);
+
+// ✅ NEW: Recipes routes (protected)
+app.use("/api/recipes", requireUser, recipesRoutes);
 
 // Example food creation (left public as before)
 app.post("/api/foods", async (req, res) => {
@@ -147,6 +154,19 @@ app.post("/api/foods", async (req, res) => {
     res.status(201).json(food);
   } catch (err) {
     console.error("Error in /api/foods:", err.message);
+    res.status(400).json({ error: "Invalid data" });
+  }
+});
+
+// Add recipe creation endpoint
+app.post("/api/recipe", async (req, res) => {
+  try {
+    const found = await Recipe.findOne({ Name: req.body.Name }).collation({ locale: "en", strength: 2 });
+    if (found) return res.status(409).json({ error: "Recipe already exists" });
+    const recipe = await Recipe.create(req.body);
+    res.status(201).json(recipe);
+  } catch (err) {
+    console.error("Error in /api/recipe:", err.message);
     res.status(400).json({ error: "Invalid data" });
   }
 });

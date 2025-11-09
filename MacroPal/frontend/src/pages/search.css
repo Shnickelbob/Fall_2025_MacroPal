@@ -91,11 +91,12 @@
     color: #6d72ff;
 }
 
-.search-page .search-select2 .chev {
-    position: absolute;
-    right: 14px;
-    opacity: .8;
-    pointer-events: none;
+.search-select2 .chev {
+    position: static !important;
+    right: auto !important;
+    margin-top: 2px;
+    display: block;
+    align-self: center;
 }
 
 .search-page .search-select2 .label {
