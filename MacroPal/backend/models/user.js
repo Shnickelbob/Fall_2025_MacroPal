@@ -50,7 +50,7 @@ const userSchema = new mongoose.Schema({ // creates a schema for a user
     */
     Log: [
         {
-            type:mongoose.Schema.Types.ObjectId,
+            type: mongoose.Schema.Types.ObjectId,
             ref: "Food", // Linker
         }
     ],
@@ -58,12 +58,20 @@ const userSchema = new mongoose.Schema({ // creates a schema for a user
     // List of favorited/saved food items:
     Saved_Foods: [
         {
-            type:mongoose.Schema.Types.ObjectId,
+            type: mongoose.Schema.Types.ObjectId,
             ref: "Food", // Linker
         }
     ],
 
-   // Following: a sequence of attributes for the goal values set by user:
+    // List of favorited/saved recipe items:
+    Saved_Recipes: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Recipe", // Linker
+        }
+    ],
+
+    // Following: a sequence of attributes for the goal values set by user:
     Goal_Cals: {
         type: Number,
         default: 0,
@@ -85,7 +93,7 @@ const userSchema = new mongoose.Schema({ // creates a schema for a user
             message: "{VALUE} must be an integer"
         }
     },
-   
+
     Goal_Fat: {
         type: Number,
         default: 0,
@@ -115,29 +123,29 @@ userSchema.set('toObject', { virtuals: true });
 
 // A convenient virtual that maps your Goal_* fields to a single "goals" object
 userSchema.virtual('goals')
-  .get(function () {
-    return {
-      cal: this.Goal_Cals ?? 0,
-      protein: this.Goal_Protein ?? 0,
-      carbs: this.Goal_Carbs ?? 0,
-      fat: this.Goal_Fat ?? 0,
-    };
-  })
-  .set(function (v) {
-    if (v == null || typeof v !== 'object') return;
-    if (v.cal != null) this.Goal_Cals = v.cal;
-    if (v.protein != null) this.Goal_Protein = v.protein;
-    if (v.carbs != null) this.Goal_Carbs = v.carbs;
-    if (v.fat != null) this.Goal_Fat = v.fat;
-  });
+    .get(function () {
+        return {
+            cal: this.Goal_Cals ?? 0,
+            protein: this.Goal_Protein ?? 0,
+            carbs: this.Goal_Carbs ?? 0,
+            fat: this.Goal_Fat ?? 0,
+        };
+    })
+    .set(function (v) {
+        if (v == null || typeof v !== 'object') return;
+        if (v.cal != null) this.Goal_Cals = v.cal;
+        if (v.protein != null) this.Goal_Protein = v.protein;
+        if (v.carbs != null) this.Goal_Carbs = v.carbs;
+        if (v.fat != null) this.Goal_Fat = v.fat;
+    });
 
 // Small helper you can call from routes to update any subset of goals
 userSchema.methods.applyGoalPatch = function (patch = {}) {
-  if (patch.cal != null) this.Goal_Cals = patch.cal;
-  if (patch.protein != null) this.Goal_Protein = patch.protein;
-  if (patch.carbs != null) this.Goal_Carbs = patch.carbs;
-  if (patch.fat != null) this.Goal_Fat = patch.fat;
-  return this;
+    if (patch.cal != null) this.Goal_Cals = patch.cal;
+    if (patch.protein != null) this.Goal_Protein = patch.protein;
+    if (patch.carbs != null) this.Goal_Carbs = patch.carbs;
+    if (patch.fat != null) this.Goal_Fat = patch.fat;
+    return this;
 };
 
 const User = mongoose.models.User || mongoose.model("User", userSchema); // creates a model called "User"
