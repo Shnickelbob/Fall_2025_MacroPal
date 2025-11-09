@@ -19,6 +19,7 @@ import { fetchToday } from "../api/log";
 import { patchGoals /* getGoals */ } from "../api/user";
 import { FaStar } from "react-icons/fa";
 import ModalSavedFoods from "../Components/ModalSavedFoods";
+import ModalRecipes from "../Components/ModalRecipes";
 
 function HomePage() {
   // modals
@@ -27,9 +28,16 @@ function HomePage() {
   const [showEditGoals, setShowEditGoals] = useState(false);
   const [showSavedFoods, setShowSavedFoods] = useState(false);
 
-  // saved foods state (NEW)
-  const [savedFoods, setSavedFoods] = useState([]);
-  const [loadingSaved, setLoadingSaved] = useState(false);
+// saved foods state
+const [savedFoods, setSavedFoods] = useState([]);
+const [loadingSaved, setLoadingSaved] = useState(false);
+
+// recipes modal state
+const [showRecipes, setShowRecipes] = useState(false);
+const [recipes, setRecipes] = useState([]);
+const [loadingRecipes, setLoadingRecipes] = useState(false);
+
+
 
   // header name
   const [screenName, setScreenName] = useState("User");
@@ -43,6 +51,23 @@ function HomePage() {
     goals: { cal: 0, protein: 0, carbs: 0, fat: 0 },
   });
   const [err, setErr] = useState("");
+
+//Recipes fetch
+  useEffect(() => {
+    if (!showRecipes) return;
+    (async () => {
+      setLoadingRecipes(true);
+      try {
+        const r = await fetch("http://localhost:5000/api/recipes", { credentials: "include" });
+        const body = await r.json().catch(() => ({}));
+        setRecipes(body.recipes || []);
+      } catch {
+        setRecipes([]);
+      } finally {
+        setLoadingRecipes(false);
+      }
+    })();
+  }, [showRecipes]);
 
   // load + refresh on visibility
   useEffect(() => {
@@ -166,6 +191,20 @@ function HomePage() {
       alert(e.message);
     }
   };
+
+  async function logRecipe(payload) {
+    const res = await fetch("http://localhost:5000/api/log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error || "Failed to log recipe");
+    }
+    window.location.href = "/log";
+  }
 
   // Add food demo submit
   const handleSubmit = async (data) => {
@@ -316,6 +355,16 @@ function HomePage() {
         <FaList />
       </Link>
 
+      <button
+        title="Log a recipe"
+        className="mp-btn-homepage"
+        style={{ position: "absolute", bottom: 20, right: 170 }}
+        onClick={() => setShowRecipes(true)}
+      >
+        Log Recipes
+      </button>
+
+
       {/* Errors */}
       {err && <div style={{ color: "crimson", marginTop: 8 }}>{err}</div>}
 
@@ -348,6 +397,14 @@ function HomePage() {
           open={showAddRecipe}
           setOpen={setShowAddRecipe}
           onSubmit={handleRecipeSubmit}
+        />
+      )}
+      {showRecipes && (
+        <ModalRecipes
+          open={showRecipes}
+          setOpen={setShowRecipes}
+          items={loadingRecipes ? [] : recipes}
+          onLog={logRecipe}
         />
       )}
     </div>

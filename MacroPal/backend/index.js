@@ -15,6 +15,9 @@ import Food from "./models/food.js";
 import Recipe from "./models/recipe.js";
 import savedRoutes from "./routes/saved.js";
 
+// ✅ NEW: mount recipes routes
+import recipesRoutes from "./routes/recipes.js";
+
 dotenv.config();
 
 const app = express();
@@ -136,8 +139,11 @@ app.use("/api/user", requireUser, userRoutes);
 app.use("/api/log", requireUser, logRouter);
 console.log("[index.js] mounted /api/user and /api/log as protected");
 
-// Mount saved routes
+// Saved routes (internal auth check is inside savedRoutes)
 app.use("/api/saved", savedRoutes);
+
+// ✅ NEW: Recipes routes (protected)
+app.use("/api/recipes", requireUser, recipesRoutes);
 
 // Example food creation (left public as before)
 app.post("/api/foods", async (req, res) => {
