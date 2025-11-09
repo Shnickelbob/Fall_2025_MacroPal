@@ -1,4 +1,6 @@
+// ModalSavedFoods.jsx
 import { useEffect, useRef, useState } from "react";
+import "../pages/search.css";
 
 export default function ModalSavedFoods({ open, setOpen, items = [], onLog }) {
   const [loggingId, setLoggingId] = useState(null);
@@ -15,20 +17,18 @@ export default function ModalSavedFoods({ open, setOpen, items = [], onLog }) {
 
   const handleLog = async (food) => {
     if (loggingId) return;
-    setLoggingId(food._id || food.id || food.Name || food.name);
+    const id = food._id || food.id || food.Name || food.name;
+    setLoggingId(id);
     try {
       const mapped = {
-        _id: food._id || food.id,
+        _id: id,
         name: food.name ?? food.Name ?? "Unnamed",
         calories: food.calories ?? food.Calories ?? 0,
         protein: food.protein ?? food.Protein ?? 0,
         carbs: food.carbs ?? food.Carbs ?? 0,
         fat: food.fat ?? food.Fat ?? 0,
       };
-      const maybePromise = onLog?.(mapped);
-      if (maybePromise && typeof maybePromise.then === "function") {
-        await maybePromise;
-      }
+      await onLog?.(mapped);
     } finally {
       setLoggingId(null);
     }
@@ -59,7 +59,8 @@ export default function ModalSavedFoods({ open, setOpen, items = [], onLog }) {
           <button className="mp-btn" onClick={() => setOpen(false)} aria-label="Close">✕</button>
         </div>
 
-        <div className="mp-modal-body" style={{ overflow: "auto", paddingBottom: 8 }}>
+        {/* 👇 add "search-page" so .search-card styles apply */}
+        <div className="mp-modal-body search-page" style={{ overflow: "auto", paddingBottom: 8 }}>
           <div style={{ display: "grid", gap: 10 }}>
             {items.length === 0 && <div>No saved foods yet.</div>}
             {items.map((food) => {
@@ -67,9 +68,9 @@ export default function ModalSavedFoods({ open, setOpen, items = [], onLog }) {
               const disabled = loggingId === id;
               const name = food.name ?? food.Name ?? "Unnamed";
               const calories = food.calories ?? food.Calories ?? 0;
-              const protein = food.protein ?? food.Protein ?? 0;
-              const fat = food.fat ?? food.Fat ?? 0;
-              const carbs = food.carbs ?? food.Carbs ?? 0;
+              const protein  = food.protein  ?? food.Protein  ?? 0;
+              const fat      = food.fat      ?? food.Fat      ?? 0;
+              const carbs    = food.carbs    ?? food.Carbs    ?? 0;
 
               return (
                 <div key={id} className="search-card">
@@ -79,7 +80,6 @@ export default function ModalSavedFoods({ open, setOpen, items = [], onLog }) {
                       Calories: {calories} | Protein: {protein}g | Fat {fat}g | Carbs: {carbs}g
                     </div>
                   </div>
-
                   <button
                     type="button"
                     onClick={() => handleLog({ _id: id, name, calories, protein, fat, carbs })}

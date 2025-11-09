@@ -1,4 +1,4 @@
-/** 
+/**
  * Home dashboard: progress vs goals + quick actions
  * @author Team 6
  * @version October 12, 2025
@@ -26,6 +26,10 @@ function HomePage() {
   const [showAddRecipe, setShowAddRecipe] = useState(false);
   const [showEditGoals, setShowEditGoals] = useState(false);
   const [showSavedFoods, setShowSavedFoods] = useState(false);
+
+  // saved foods state (NEW)
+  const [savedFoods, setSavedFoods] = useState([]);
+  const [loadingSaved, setLoadingSaved] = useState(false);
 
   // header name
   const [screenName, setScreenName] = useState("User");
@@ -86,6 +90,57 @@ function HomePage() {
       window.removeEventListener("visibilitychange", onVis);
     };
   }, []);
+
+  // fetch saved foods when the modal opens (NEW)
+  useEffect(() => {
+    if (!showSavedFoods) return;
+    (async () => {
+      setLoadingSaved(true);
+      try {
+        const res = await fetch("http://localhost:5000/api/saved", {
+          headers: { "x-user-id": localStorage.getItem("mp_user_id") || "" },
+          credentials: "include",
+        });
+        if (!res.ok) {
+          setSavedFoods([]);
+        } else {
+          const data = await res.json();
+          setSavedFoods(data.saved || []);
+        }
+      } catch {
+        setSavedFoods([]);
+      } finally {
+        setLoadingSaved(false);
+      }
+    })();
+  }, [showSavedFoods]);
+
+  // log a saved food (same payload as Search) (NEW)
+  async function logSavedFood(food) {
+    const payload = {
+      foodId: food._id,
+      name: food.name ?? food.Name ?? "Unnamed",
+      cal: food.calories ?? food.Calories ?? 0,
+      protein: food.protein ?? food.Protein ?? 0,
+      carbs: food.carbs ?? food.Carbs ?? 0,
+      fat: food.fat ?? food.Fat ?? 0,
+      qty: 1,
+    };
+
+    const res = await fetch("http://localhost:5000/api/log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      alert(body.error || "Failed to log food");
+      return;
+    }
+    window.location.href = "/log";
+  }
 
   // Edit Goals submit
   const handleGoalsSubmit = async (patch) => {
@@ -251,7 +306,6 @@ function HomePage() {
         <FaStar />
       </button>
 
-
       {/* Daily log link */}
       <Link
         to="/log"
@@ -285,15 +339,10 @@ function HomePage() {
         <ModalSavedFoods
           open={showSavedFoods}
           setOpen={setShowSavedFoods}
-          // TODO: Replace this static list with data fetched from the backend
-          items={[
-            { _id: "1", name: "Grilled Chicken", calories: 220, protein: 40, fat: 5, carbs: 0 },
-            { _id: "2", name: "Banana", calories: 90, protein: 1, fat: 0, carbs: 23 },
-            { _id: "3", name: "Greek Yogurt", calories: 130, protein: 12, fat: 4, carbs: 9 }
-          ]}
-          onLog={(food) => console.log("Log clicked for:", food)}
-          />
-        )}
+          items={loadingSaved ? [] : savedFoods}
+          onLog={logSavedFood}
+        />
+      )}
       {showAddRecipe && (
         <ModalAddRecipe
           open={showAddRecipe}
