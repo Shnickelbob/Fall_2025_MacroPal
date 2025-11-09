@@ -116,7 +116,7 @@ const [loadingRecipes, setLoadingRecipes] = useState(false);
     };
   }, []);
 
-  // fetch saved foods when the modal opens (NEW)
+  // fetch saved foods when the modal opens
   useEffect(() => {
     if (!showSavedFoods) return;
     (async () => {
@@ -130,7 +130,9 @@ const [loadingRecipes, setLoadingRecipes] = useState(false);
           setSavedFoods([]);
         } else {
           const data = await res.json();
-          setSavedFoods(data.saved || []);
+          const foods = data.savedFoods ?? data.saved ?? [];
+          const norm = foods.map(f => ({ ...f, _id: f._id ?? f.id ?? f.Name ?? f.name }));
+          setSavedFoods(norm);
         }
       } catch {
         setSavedFoods([]);
