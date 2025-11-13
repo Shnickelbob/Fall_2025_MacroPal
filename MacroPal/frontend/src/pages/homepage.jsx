@@ -6,10 +6,10 @@
 import { useEffect, useState } from "react";
 import "../App.css";
 // NOTE: Menu is global via App.jsx, so no local Menu import here.
-import { FaPlus, FaList } from "react-icons/fa";
+import { FaPlus, FaList, FaStar, FaPlusCircle } from "react-icons/fa";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import { BsPencilFill } from "react-icons/bs";
-import { GiKnifeFork } from "react-icons/gi";
+import { GiMeal } from "react-icons/gi";
 import ProgressBar from "../Components/ProgressBar";
 import ModalAddFood from "../Components/ModalAddFood";
 import ModalGoalVals from "../Components/ModalGoalVals";
@@ -17,7 +17,6 @@ import ModalAddRecipe from "../Components/ModalAddRecipe";
 import { Link } from "react-router-dom";
 import { fetchToday } from "../api/log";
 import { patchGoals /* getGoals */ } from "../api/user";
-import { FaStar } from "react-icons/fa";
 import ModalSavedFoods from "../Components/ModalSavedFoods";
 import ModalRecipes from "../Components/ModalRecipes";
 
@@ -301,7 +300,7 @@ const [loadingRecipes, setLoadingRecipes] = useState(false);
       <button
         title="Edit goals"
         className="mp-btn-homepage"
-        style={{ position: "absolute", top: 20, right: 20 }}
+        style={{ position: "absolute", bottom: 20, left: 20 }} 
         onClick={() => setShowEditGoals(true)}
       >
         <BsPencilFill />
@@ -311,17 +310,17 @@ const [loadingRecipes, setLoadingRecipes] = useState(false);
       <button
         title="Add Recipe"
         className="mp-btn-homepage"
-        style={{ position: "absolute", top: 20, right: 70 }}
+        style={{ position: "absolute", top: 20, right: 20 }}
         onClick={() => setShowAddRecipe(true)}
       >
-        <GiKnifeFork />
+        <FaPlusCircle />
       </button>
 
       {/* Add food */}
       <button
         title="Add food to the database"
         className="mp-btn-homepage"
-        style={{ position: "absolute", bottom: 20, right: 20 }}
+        style={{ position: "absolute", top: 20, right: 70 }}
         onClick={() => setShowAddFood(true)}
       >
         <FaPlus />
@@ -331,7 +330,7 @@ const [loadingRecipes, setLoadingRecipes] = useState(false);
       <button
         title="Search for food items"
         className="mp-btn-homepage"
-        style={{ position: "absolute", bottom: 20, right: 70 }}
+        style={{ position: "absolute", bottom: 20, right: 170 }}
         onClick={() => (window.location.href = "/search")}
       >
         <FaMagnifyingGlass />
@@ -352,7 +351,7 @@ const [loadingRecipes, setLoadingRecipes] = useState(false);
         to="/log"
         title="View daily log"
         className="mp-btn-homepage"
-        style={{ position: "absolute", bottom: 20, left: 20 }}
+        style={{ position: "absolute", bottom: 20, right: 70 }}
       >
         <FaList />
       </Link>
@@ -360,10 +359,10 @@ const [loadingRecipes, setLoadingRecipes] = useState(false);
       <button
         title="Log a recipe"
         className="mp-btn-homepage"
-        style={{ position: "absolute", bottom: 20, right: 170 }}
+        style={{ position: "absolute", bottom: 20, right: 20 }}
         onClick={() => setShowRecipes(true)}
       >
-        Log Recipes
+        <GiMeal />
       </button>
 
 

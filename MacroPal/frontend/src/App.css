@@ -94,6 +94,7 @@ body, #root {
   cursor: pointer;
   color: #121212;
   font-size: 1.3em;
+  line-height: 1.1em;
 }
 
 /* Modal input layout */
