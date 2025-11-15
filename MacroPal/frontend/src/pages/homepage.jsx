@@ -29,6 +29,7 @@ function HomePage() {
 
 // saved foods state
 const [savedFoods, setSavedFoods] = useState([]);
+const [savedRecipes, setSavedRecipes] = useState([]);
 const [loadingSaved, setLoadingSaved] = useState(false);
 
 // recipes modal state
@@ -115,7 +116,7 @@ const [loadingRecipes, setLoadingRecipes] = useState(false);
     };
   }, []);
 
-  // fetch saved foods when the modal opens
+  // fetch saved foods and recipes when the modal opens
   useEffect(() => {
     if (!showSavedFoods) return;
     (async () => {
@@ -125,21 +126,34 @@ const [loadingRecipes, setLoadingRecipes] = useState(false);
           headers: { "x-user-id": localStorage.getItem("mp_user_id") || "" },
           credentials: "include",
         });
+
         if (!res.ok) {
           setSavedFoods([]);
+          setSavedRecipes([]);
         } else {
           const data = await res.json();
-          const foods = data.savedFoods ?? data.saved ?? [];
-          const norm = foods.map(f => ({ ...f, _id: f._id ?? f.id ?? f.Name ?? f.name }));
-          setSavedFoods(norm);
+
+          // foods
+          const foods = data.savedFoods ?? [];
+          const normFoods = foods.map(f => ({
+            ...f,
+            _id: f._id ?? f.id ?? f.Name ?? f.name,
+          }));
+          setSavedFoods(normFoods);
+
+          // recipes
+          const recipes = data.savedRecipes ?? [];
+          setSavedRecipes(recipes);
         }
       } catch {
         setSavedFoods([]);
+        setSavedRecipes([]);
       } finally {
         setLoadingSaved(false);
       }
     })();
   }, [showSavedFoods]);
+
 
   // log a saved food (same payload as Search) (NEW)
   async function logSavedFood(food) {
@@ -205,6 +219,11 @@ const [loadingRecipes, setLoadingRecipes] = useState(false);
       throw new Error(body.error || "Failed to log recipe");
     }
     window.location.href = "/log";
+  }
+
+  async function logSavedRecipe(recipe) {
+    const payload = { recipeId: recipe._id };
+    await logRecipe(payload);
   }
 
   // Add food demo submit
@@ -389,8 +408,10 @@ const [loadingRecipes, setLoadingRecipes] = useState(false);
         <ModalSavedFoods
           open={showSavedFoods}
           setOpen={setShowSavedFoods}
-          items={loadingSaved ? [] : savedFoods}
-          onLog={logSavedFood}
+          foods={loadingSaved ? [] : savedFoods}
+          recipes={loadingSaved ? [] : savedRecipes}
+          onLogFood={logSavedFood}
+          onLogRecipe={logRecipe}  //  uses the same function as Log Recipe modal
         />
       )}
       {showAddRecipe && (
