@@ -23,7 +23,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: 'MacroPal'    # set this to your application's name
+  APP_NAME: 'MacroPal'    # set this to your application's name
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
   NODE_VERSION: '20.x' # set this to the node version to use
   SECRET_CLIENT_ID: ${{ secrets.AZUREAPPSERVICE_CLIENTID_A797467515234D628A3AB5364B137640 }}
@@ -69,6 +69,6 @@ jobs:
       id: deploy-to-webapp
       uses: azure/webapps-deploy@v2
       with:
-        app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        app-name: ${{ env.APP_NAME }}
+        slot-name: 'Production'
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
