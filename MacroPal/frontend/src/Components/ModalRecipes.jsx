@@ -35,6 +35,7 @@ export default function ModalRecipes({ open, setOpen, items = [], onLog }) {
         carbs: (r.Carbs || 0) * s,
         fat: (r.Fat || 0) * s,
         qty: 1,
+        servings: s,
       };
       await onLog(payload);
     } finally {
@@ -63,7 +64,7 @@ export default function ModalRecipes({ open, setOpen, items = [], onLog }) {
         style={{ maxWidth: 760, width: "92vw", maxHeight: "80vh", display: "flex", flexDirection: "column" }}
       >
         <div className="mp-modal-header">
-          <strong>Log Recipe</strong>
+          <strong>Select recipe and servings:</strong>
           <button className="mp-btn" onClick={() => setOpen(false)} aria-label="Close">✕</button>
         </div>
 
