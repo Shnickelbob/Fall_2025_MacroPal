@@ -49,6 +49,7 @@ export default function Search() {
 
   // recipe logging modal
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState(null);
 
   // load saved foods once
   useEffect(() => {
@@ -166,6 +167,7 @@ export default function Search() {
       }
 
       setRecipeModalOpen(false);
+      setSelectedRecipe(null);
       window.location.href = '/log';
     } catch (err) {
       console.error(err);
@@ -323,17 +325,17 @@ export default function Search() {
   const placeholder =
     by === 'recipes' ? 'Search recipes…' : `Search by ${by}…`;
 
-  // normalize recipe results into the shape expected by ModalRecipes (Name/Calories/Protein/Carbs/Fat)
-  const recipesOnlyForModal = results
-    .filter((r) => r.type === 'recipe')
-    .map((r) => ({
-      ...r,
-      Name: r.Name ?? r.name ?? 'Unnamed',
-      Calories: r.Calories ?? r.calories ?? 0,
-      Protein: r.Protein ?? r.protein ?? 0,
-      Carbs: r.Carbs ?? r.carbs ?? 0,
-      Fat: r.Fat ?? r.fat ?? 0,
-    }));
+  // normalize the SINGLE selected recipe into the shape expected by ModalRecipes
+  const recipesOnlyForModal = selectedRecipe
+    ? [{
+      ...selectedRecipe,
+      Name: selectedRecipe.Name ?? selectedRecipe.name ?? 'Unnamed',
+      Calories: selectedRecipe.Calories ?? selectedRecipe.calories ?? 0,
+      Protein: selectedRecipe.Protein ?? selectedRecipe.protein ?? 0,
+      Carbs: selectedRecipe.Carbs ?? selectedRecipe.carbs ?? 0,
+      Fat: selectedRecipe.Fat ?? selectedRecipe.fat ?? 0,
+    }]
+    : [];
 
   return (
     <div className="search-page" style={{ maxWidth: 760, margin: '24px auto', padding: '0 16px' }}>
@@ -588,7 +590,8 @@ export default function Search() {
                       className="search-log-btn"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setRecipeModalOpen(true);
+                        setSelectedRecipe(foodItem);     // pick just this recipe
+                        setRecipeModalOpen(true);        // open modal
                       }}
                     >
                       Log
@@ -608,7 +611,10 @@ export default function Search() {
       {/* Recipe logging modal (recipes view) */}
       <ModalRecipes
         open={recipeModalOpen}
-        setOpen={setRecipeModalOpen}
+        setOpen={(isOpen) => {
+          setRecipeModalOpen(isOpen);
+          if (!isOpen) setSelectedRecipe(null);
+        }}
         items={recipesOnlyForModal}
         onLog={logRecipeFromModal}
       />
