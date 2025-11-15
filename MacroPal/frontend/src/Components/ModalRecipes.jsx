@@ -69,7 +69,7 @@ export default function ModalRecipes({ open, setOpen, items = [], onLog }) {
         </div>
 
         {/* add 'search-page' so the saved/search card styles apply */}
-        <div className="mp-modal-body search-page" style={{ overflow: "auto", paddingBottom: 8 }}>
+        <div className="mp-modal-body search-page" style={{ overflow: "auto", paddingBottom: 24 }}>
           <div style={{ display: "grid", gap: 10 }}>
             {items.length === 0 && <div>No recipes found.</div>}
             {items.map((r) => (
@@ -113,10 +113,8 @@ export default function ModalRecipes({ open, setOpen, items = [], onLog }) {
             ))}
           </div>
         </div>
+        
 
-        <div className="mp-modal-footer">
-          <button className="mp-btn" onClick={() => setOpen(false)}>Close</button>
-        </div>
       </div>
     </div>
   );
