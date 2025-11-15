@@ -241,10 +241,19 @@ export default function DailyLog() {
                                         style={{ cursor: "pointer" }}
                                     >
                                         <div>
-                                            <div className="log-name">{item.name}</div>
+                                            {/* top row: name on left, servings badge on right (if > 1) */}
+                                            <div className="log-header-row">
+                                                <div className="log-name">{item.name}</div>
+                                                {item.servings > 1 && (
+                                                    <span className="log-servings-pill">
+                                                        {item.servings} serving{item.servings > 1 ? "s" : ""}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* second row: macro stats only */}
                                             <div className="log-stats">
-                                                Calories: {item.cal ?? 0} | Protein: {item.protein ?? 0}
-                                                g | Fat: {item.fat ?? 0}g | Carbs: {item.carbs ?? 0}g
+                                                Calories: {item.cal ?? 0} | Protein: {item.protein ?? 0}g | Fat: {item.fat ?? 0}g | Carbs: {item.carbs ?? 0}g
                                                 {item.qty > 1 ? ` × ${item.qty}` : ""}
                                             </div>
                                         </div>

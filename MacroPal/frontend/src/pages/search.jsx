@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react';
 import { ChevronDown, Star } from 'lucide-react';
 import './search.css';
 import { Link } from "react-router-dom";
+import ModalRecipes from '../Components/ModalRecipes.jsx';
 
 export default function Search() {
   // core search state
@@ -45,6 +46,9 @@ export default function Search() {
 
   // selected cards for multi-log (foods only)
   const [selectedIds, setSelectedIds] = useState(new Set());
+
+  // recipe logging modal
+  const [recipeModalOpen, setRecipeModalOpen] = useState(false);
 
   // load saved foods once
   useEffect(() => {
@@ -143,6 +147,29 @@ export default function Search() {
       alert(e.message || 'Could not log item.');
     } finally {
       setLoggingId(null);
+    }
+  }
+
+  // log a RECIPE coming from the ModalRecipes component
+  async function logRecipeFromModal(payload) {
+    try {
+      const res = await fetch('http://localhost:5000/api/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || 'Failed to log recipe');
+      }
+
+      setRecipeModalOpen(false);
+      window.location.href = '/log';
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Could not log recipe.');
     }
   }
 
@@ -296,6 +323,18 @@ export default function Search() {
   const placeholder =
     by === 'recipes' ? 'Search recipes…' : `Search by ${by}…`;
 
+  // normalize recipe results into the shape expected by ModalRecipes (Name/Calories/Protein/Carbs/Fat)
+  const recipesOnlyForModal = results
+    .filter((r) => r.type === 'recipe')
+    .map((r) => ({
+      ...r,
+      Name: r.Name ?? r.name ?? 'Unnamed',
+      Calories: r.Calories ?? r.calories ?? 0,
+      Protein: r.Protein ?? r.protein ?? 0,
+      Carbs: r.Carbs ?? r.carbs ?? 0,
+      Fat: r.Fat ?? r.fat ?? 0,
+    }));
+
   return (
     <div className="search-page" style={{ maxWidth: 760, margin: '24px auto', padding: '0 16px' }}>
       {/* slow rainbow title animation */}
@@ -324,7 +363,7 @@ export default function Search() {
         </h1>
         <p className="intro-subtitle">
           {by === 'recipes'
-            ? 'Search recipes by name (logging coming soon)'
+            ? 'Search recipes by name and log total servings'
             : 'Find food and quickly preview macros'}
         </p>
         <div className="intro-divider" />
@@ -531,7 +570,7 @@ export default function Search() {
 
                   {/* Right-side button:
                       - Foods: active Log button (existing behavior)
-                      - Recipes: show a click popup "Coming Soon" */}
+                      - Recipes: open logging modal with servings */}
                   {!isRecipe ? (
                     <button
                       type="button"
@@ -545,11 +584,11 @@ export default function Search() {
                   ) : (
                     <button
                       type="button"
-                      aria-label={`Log ${foodItem.name} (coming soon)`}
+                      aria-label={`Log ${foodItem.name}`}
                       className="search-log-btn"
                       onClick={(e) => {
                         e.stopPropagation();
-                        alert("Coming Soon!");
+                        setRecipeModalOpen(true);
                       }}
                     >
                       Log
@@ -565,6 +604,14 @@ export default function Search() {
           </div>
         </>
       )}
+
+      {/* Recipe logging modal (recipes view) */}
+      <ModalRecipes
+        open={recipeModalOpen}
+        setOpen={setRecipeModalOpen}
+        items={recipesOnlyForModal}
+        onLog={logRecipeFromModal}
+      />
 
       {/* Log All Selected button (foods only) */}
       {selectedIds.size > 0 && by !== 'recipes' && (
