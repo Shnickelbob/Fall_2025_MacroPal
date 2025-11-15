@@ -20,6 +20,7 @@ const logEntrySchema = new mongoose.Schema(
     carbs: Number,
     fat: Number,
     qty: { type: Number, default: 1 },
+    servings: { type: Number, default: 1 },
   },
   { timestamps: true }
 );
