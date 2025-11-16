@@ -9,6 +9,7 @@ import HomePage from "./pages/homepage.jsx";
 import GoalValsTest from "./DemoPages/GoalValsTest.jsx";
 import DailyLog from "./pages/log.jsx";
 import Menu from "./Components/Menu";
+import Recipe from "./pages/recipe.jsx";
 import { useState } from "react";
 
 function App() {
@@ -42,6 +43,7 @@ function AppContent({ open, setOpen }) {
         <Route path="/homepage" element={<HomePage />} />
         <Route path="/goaldemo" element={<GoalValsTest />} />
         <Route path="/log" element={<DailyLog />} /> {/* merged route */}
+        <Route path="/recipe/:id" element={<Recipe />} />
       </Routes>
     </>
   );

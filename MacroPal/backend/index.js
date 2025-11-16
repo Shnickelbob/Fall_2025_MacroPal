@@ -12,6 +12,7 @@ import searchRouter from "./routes/search.js";
 import logRouter from "./routes/log.js";
 import userRoutes from "./routes/user.js";
 import Food from "./models/food.js";
+import recipeRouter from "./routes/recipe.js";
 
 dotenv.config();
 
@@ -132,6 +133,7 @@ app.use("/api/search", searchRouter);
 // Protected routes (must include x-user-id or session)
 app.use("/api/user", requireUser, userRoutes);
 app.use("/api/log", requireUser, logRouter);
+app.use("/api/recipe", requireUser,  recipeRouter);
 console.log("[index.js] mounted /api/user and /api/log as protected");
 
 // Example food creation (left public as before)
