@@ -13,6 +13,11 @@ import logRouter from "./routes/log.js";
 import userRoutes from "./routes/user.js";
 import Food from "./models/food.js";
 import recipeRouter from "./routes/recipe.js";
+import Recipe from "./models/recipe.js";
+import savedRoutes from "./routes/saved.js";
+
+// ✅ NEW: mount recipes routes
+import recipesRoutes from "./routes/recipes.js";
 
 dotenv.config();
 
@@ -84,12 +89,12 @@ app.get("/api/health", async (_req, res) => {
 app.post("/api/register", async (req, res) => {
   try {
     const { username, password } = req.body;
-    
-    if(username.length<8 || username.length>16){
+
+    if (username.length < 8 || username.length > 16) {
       return res.send(`Username must be between 8-16 characters`);
     }
 
-    if(password.length<8 || password.length>16 || password.search(/[!@#$%^&*0-9]/) === -1 || password.search(/[A-Z]/) === -1){
+    if (password.length < 8 || password.length > 16 || password.search(/[!@#$%^&*0-9]/) === -1 || password.search(/[A-Z]/) === -1) {
       return res.send(`Password must be between 8-16 characters, contain an uppercase character, and contain a number or special character`);
     }
 
@@ -136,6 +141,12 @@ app.use("/api/log", requireUser, logRouter);
 app.use("/api/recipe", requireUser,  recipeRouter);
 console.log("[index.js] mounted /api/user and /api/log as protected");
 
+// Saved routes (internal auth check is inside savedRoutes)
+app.use("/api/saved", savedRoutes);
+
+// ✅ NEW: Recipes routes (protected)
+app.use("/api/recipes", requireUser, recipesRoutes);
+
 // Example food creation (left public as before)
 app.post("/api/foods", async (req, res) => {
   try {
@@ -145,6 +156,19 @@ app.post("/api/foods", async (req, res) => {
     res.status(201).json(food);
   } catch (err) {
     console.error("Error in /api/foods:", err.message);
+    res.status(400).json({ error: "Invalid data" });
+  }
+});
+
+// Add recipe creation endpoint
+app.post("/api/recipe", async (req, res) => {
+  try {
+    const found = await Recipe.findOne({ Name: req.body.Name }).collation({ locale: "en", strength: 2 });
+    if (found) return res.status(409).json({ error: "Recipe already exists" });
+    const recipe = await Recipe.create(req.body);
+    res.status(201).json(recipe);
+  } catch (err) {
+    console.error("Error in /api/recipe:", err.message);
     res.status(400).json({ error: "Invalid data" });
   }
 });

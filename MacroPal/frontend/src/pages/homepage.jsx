@@ -1,4 +1,4 @@
-/** 
+/**
  * Home dashboard: progress vs goals + quick actions
  * @author Team 6
  * @version October 12, 2025
@@ -6,20 +6,38 @@
 import { useEffect, useState } from "react";
 import "../App.css";
 // NOTE: Menu is global via App.jsx, so no local Menu import here.
-import { FaPlus, FaList } from "react-icons/fa";
+import { FaPlus, FaList, FaStar, FaPlusCircle } from "react-icons/fa";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import { BsPencilFill } from "react-icons/bs";
+import { GiMeal } from "react-icons/gi";
 import ProgressBar from "../Components/ProgressBar";
 import ModalAddFood from "../Components/ModalAddFood";
 import ModalGoalVals from "../Components/ModalGoalVals";
+import ModalAddRecipe from "../Components/ModalAddRecipe";
 import { Link } from "react-router-dom";
 import { fetchToday } from "../api/log";
 import { patchGoals /* getGoals */ } from "../api/user";
+import ModalSavedFoods from "../Components/ModalSavedFoods";
+import ModalRecipes from "../Components/ModalRecipes";
 
 function HomePage() {
   // modals
   const [showAddFood, setShowAddFood] = useState(false);
+  const [showAddRecipe, setShowAddRecipe] = useState(false);
   const [showEditGoals, setShowEditGoals] = useState(false);
+  const [showSavedFoods, setShowSavedFoods] = useState(false);
+
+// saved foods state
+const [savedFoods, setSavedFoods] = useState([]);
+const [savedRecipes, setSavedRecipes] = useState([]);
+const [loadingSaved, setLoadingSaved] = useState(false);
+
+// recipes modal state
+const [showRecipes, setShowRecipes] = useState(false);
+const [recipes, setRecipes] = useState([]);
+const [loadingRecipes, setLoadingRecipes] = useState(false);
+
+
 
   // header name
   const [screenName, setScreenName] = useState("User");
@@ -33,6 +51,23 @@ function HomePage() {
     goals: { cal: 0, protein: 0, carbs: 0, fat: 0 },
   });
   const [err, setErr] = useState("");
+
+//Recipes fetch
+  useEffect(() => {
+    if (!showRecipes) return;
+    (async () => {
+      setLoadingRecipes(true);
+      try {
+        const r = await fetch("http://localhost:5000/api/recipes", { credentials: "include" });
+        const body = await r.json().catch(() => ({}));
+        setRecipes(body.recipes || []);
+      } catch {
+        setRecipes([]);
+      } finally {
+        setLoadingRecipes(false);
+      }
+    })();
+  }, [showRecipes]);
 
   // load + refresh on visibility
   useEffect(() => {
@@ -81,6 +116,72 @@ function HomePage() {
     };
   }, []);
 
+  // fetch saved foods and recipes when the modal opens
+  useEffect(() => {
+    if (!showSavedFoods) return;
+    (async () => {
+      setLoadingSaved(true);
+      try {
+        const res = await fetch("http://localhost:5000/api/saved", {
+          headers: { "x-user-id": localStorage.getItem("mp_user_id") || "" },
+          credentials: "include",
+        });
+
+        if (!res.ok) {
+          setSavedFoods([]);
+          setSavedRecipes([]);
+        } else {
+          const data = await res.json();
+
+          // foods
+          const foods = data.savedFoods ?? [];
+          const normFoods = foods.map(f => ({
+            ...f,
+            _id: f._id ?? f.id ?? f.Name ?? f.name,
+          }));
+          setSavedFoods(normFoods);
+
+          // recipes
+          const recipes = data.savedRecipes ?? [];
+          setSavedRecipes(recipes);
+        }
+      } catch {
+        setSavedFoods([]);
+        setSavedRecipes([]);
+      } finally {
+        setLoadingSaved(false);
+      }
+    })();
+  }, [showSavedFoods]);
+
+
+  // log a saved food (same payload as Search) (NEW)
+  async function logSavedFood(food) {
+    const payload = {
+      foodId: food._id,
+      name: food.name ?? food.Name ?? "Unnamed",
+      cal: food.calories ?? food.Calories ?? 0,
+      protein: food.protein ?? food.Protein ?? 0,
+      carbs: food.carbs ?? food.Carbs ?? 0,
+      fat: food.fat ?? food.Fat ?? 0,
+      qty: 1,
+    };
+
+    const res = await fetch("http://localhost:5000/api/log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      alert(body.error || "Failed to log food");
+      return;
+    }
+    window.location.href = "/log";
+  }
+
   // Edit Goals submit
   const handleGoalsSubmit = async (patch) => {
     try {
@@ -106,6 +207,25 @@ function HomePage() {
     }
   };
 
+  async function logRecipe(payload) {
+    const res = await fetch("http://localhost:5000/api/log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error || "Failed to log recipe");
+    }
+    window.location.href = "/log";
+  }
+
+  async function logSavedRecipe(recipe) {
+    const payload = { recipeId: recipe._id };
+    await logRecipe(payload);
+  }
+
   // Add food demo submit
   const handleSubmit = async (data) => {
     try {
@@ -117,6 +237,23 @@ function HomePage() {
       });
       const body = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(body.error || "Failed to create food");
+      alert(`Saved: ${body.Name}`);
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  // Add recipe submit
+  const handleRecipeSubmit = async (data) => {
+    try {
+      const r = await fetch("/api/recipe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body.error || "Failed to create recipe");
       alert(`Saved: ${body.Name}`);
     } catch (e) {
       alert(e.message);
@@ -182,17 +319,27 @@ function HomePage() {
       <button
         title="Edit goals"
         className="mp-btn-homepage"
-        style={{ position: "absolute", top: 20, right: 20 }}
+        style={{ position: "absolute", bottom: 20, left: 20 }} 
         onClick={() => setShowEditGoals(true)}
       >
         <BsPencilFill />
+      </button>
+
+      {/* Add Recipe */}
+      <button
+        title="Add Recipe"
+        className="mp-btn-homepage"
+        style={{ position: "absolute", top: 20, right: 20 }}
+        onClick={() => setShowAddRecipe(true)}
+      >
+        <FaPlusCircle />
       </button>
 
       {/* Add food */}
       <button
         title="Add food to the database"
         className="mp-btn-homepage"
-        style={{ position: "absolute", bottom: 20, right: 20 }}
+        style={{ position: "absolute", top: 20, right: 70 }}
         onClick={() => setShowAddFood(true)}
       >
         <FaPlus />
@@ -202,10 +349,20 @@ function HomePage() {
       <button
         title="Search for food items"
         className="mp-btn-homepage"
-        style={{ position: "absolute", bottom: 20, right: 70 }}
+        style={{ position: "absolute", bottom: 20, right: 170 }}
         onClick={() => (window.location.href = "/search")}
       >
         <FaMagnifyingGlass />
+      </button>
+
+      {/* Favorites */}
+      <button
+        title="View saved foods"
+        className="mp-btn-homepage"
+        style={{ position: "absolute", bottom: 20, right: 120 }}
+        onClick={() => setShowSavedFoods(true)}
+      >
+        <FaStar />
       </button>
 
       {/* Daily log link */}
@@ -213,10 +370,20 @@ function HomePage() {
         to="/log"
         title="View daily log"
         className="mp-btn-homepage"
-        style={{ position: "absolute", bottom: 20, left: 20 }}
+        style={{ position: "absolute", bottom: 20, right: 70 }}
       >
         <FaList />
       </Link>
+
+      <button
+        title="Log a recipe"
+        className="mp-btn-homepage"
+        style={{ position: "absolute", bottom: 20, right: 20 }}
+        onClick={() => setShowRecipes(true)}
+      >
+        <GiMeal />
+      </button>
+
 
       {/* Errors */}
       {err && <div style={{ color: "crimson", marginTop: 8 }}>{err}</div>}
@@ -235,6 +402,31 @@ function HomePage() {
           setOpen={setShowEditGoals}
           onSubmit={handleGoalsSubmit}
           initialGoals={today?.goals}
+        />
+      )}
+      {showSavedFoods && (
+        <ModalSavedFoods
+          open={showSavedFoods}
+          setOpen={setShowSavedFoods}
+          foods={loadingSaved ? [] : savedFoods}
+          recipes={loadingSaved ? [] : savedRecipes}
+          onLogFood={logSavedFood}
+          onLogRecipe={logRecipe}  //  uses the same function as Log Recipe modal
+        />
+      )}
+      {showAddRecipe && (
+        <ModalAddRecipe
+          open={showAddRecipe}
+          setOpen={setShowAddRecipe}
+          onSubmit={handleRecipeSubmit}
+        />
+      )}
+      {showRecipes && (
+        <ModalRecipes
+          open={showRecipes}
+          setOpen={setShowRecipes}
+          items={loadingRecipes ? [] : recipes}
+          onLog={logRecipe}
         />
       )}
     </div>

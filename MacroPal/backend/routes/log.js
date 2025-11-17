@@ -10,7 +10,7 @@
  */
 
 import express from "express";
-import LogEntry from "../models/LogEntry.js";
+import LogEntry from "../models/logEntry.js";
 import User from "../models/user.js";
 import dateKey from "../utils/dateKey.js";
 
@@ -29,7 +29,7 @@ router.post("/", async (req, res) => {
     if (!userId) return res.status(401).json({ error: "Not logged in" });
 
     const key = dateKey();
-    const { foodId, name, cal, protein, carbs, fat, qty = 1 } = req.body;
+    const { foodId, name, cal, protein, carbs, fat, qty = 1, servings = 1 } = req.body;
 
     // Coerce to numbers safely so totals math is reliable
     const toNum = (v) => (v === "" || v == null ? 0 : Number(v));
@@ -43,6 +43,7 @@ router.post("/", async (req, res) => {
       carbs: toNum(carbs),
       fat: toNum(fat),
       qty: toNum(qty) || 1,
+      servings: toNum(servings) || 1,
     });
 
     res.status(201).json(doc);

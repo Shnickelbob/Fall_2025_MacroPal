@@ -14,13 +14,15 @@
  */
 
 import { useEffect, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Star } from 'lucide-react';
 import './search.css';
 import { Link } from "react-router-dom";
+import ModalRecipes from '../Components/ModalRecipes.jsx';
 
 export default function Search() {
   // core search state
   const [userSearch, setUserSearch] = useState('');
+  // can be 'name' | 'tags' | 'recipes'
   const [by, setBy] = useState('name');
   const [results, setResults] = useState([]);
 
@@ -32,11 +34,52 @@ export default function Search() {
   // prevent spam on the “Log” button
   const [loggingId, setLoggingId] = useState(null);
 
-  // smoother typing means fewer requests
+  // smoother typing
   const debouncedSearch = useDebounce(userSearch, 250);
 
-  // tiny dropdown for Name/Tags
+  // tiny dropdown for Name/Tags/Recipes
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // saved (star) state
+  const [savedIds, setSavedIds] = useState(new Set());
+  const [savedRecipeIds, setSavedRecipeIds] = useState(new Set());
+
+  // selected cards for multi-log (foods only)
+  const [selectedIds, setSelectedIds] = useState(new Set());
+
+  // recipe logging modal
+  const [recipeModalOpen, setRecipeModalOpen] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState(null);
+
+  // load saved foods once
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/saved', {
+          headers: { 'x-user-id': localStorage.getItem('mp_user_id') || '' },
+          credentials: 'include',
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // Support both old and new response shapes:
+        // old:  { saved: [...] }  (foods only)
+        // new:  { savedFoods: [...], savedRecipes: [...] }
+        const foodsArr = Array.isArray(data?.savedFoods) ? data.savedFoods : (data?.saved || []);
+        const recipesArr = Array.isArray(data?.savedRecipes) ? data.savedRecipes : [];
+
+        const foodIds = new Set(foodsArr.map(f => f._id));
+        const recipeIds = new Set(recipesArr.map(r => r._id));
+
+        setSavedIds(foodIds);
+        setSavedRecipeIds(recipeIds);
+      } catch (err) {
+        console.error('Failed to fetch saved items:', err);
+        setSavedIds(new Set()); // reset to empty if it fails to fetch
+        setSavedRecipeIds(new Set());
+      }
+    })();
+  }, []);
 
   // run the search
   async function runSearch(overrideText) {
@@ -53,7 +96,11 @@ export default function Search() {
 
     setLoading(true);
     try {
-      const params = new URLSearchParams({ userSearch: trimmedSearch, by });
+      // If by === 'recipes', we search recipes by name. Otherwise, we search foods by the chosen field.
+      const type = by === 'recipes' ? 'recipes' : 'foods';
+      const byParam = by === 'recipes' ? 'name' : by;
+
+      const params = new URLSearchParams({ userSearch: trimmedSearch, by: byParam, type });
       const response = await fetch(`http://localhost:5000/api/search?${params.toString()}`);
       if (!response.ok) throw new Error('Network error');
 
@@ -104,11 +151,79 @@ export default function Search() {
     }
   }
 
+  // log a RECIPE coming from the ModalRecipes component
+  async function logRecipeFromModal(payload) {
+    try {
+      const res = await fetch('http://localhost:5000/api/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || 'Failed to log recipe');
+      }
+
+      setRecipeModalOpen(false);
+      setSelectedRecipe(null);
+      window.location.href = '/log';
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Could not log recipe.');
+    }
+  }
+
+  // toggle card selection (foods only; recipes are not selectable/loggable yet)
+  function toggleSelect(foodId) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(foodId)) next.delete(foodId);
+      else next.add(foodId);
+      return next;
+    });
+  }
+
+  // log all selected foods
+  async function logAllSelected() {
+    const selected = results.filter(f => selectedIds.has(f._id) && f.type !== 'recipe');
+    if (selected.length === 0) return;
+
+    try {
+      for (const food of selected) {
+        const payload = {
+          foodId: food._id,
+          name: food.name ?? food.Name ?? 'Unnamed',
+          cal: food.calories ?? food.Calories ?? 0,
+          protein: food.protein ?? food.Protein ?? 0,
+          carbs: food.carbs ?? food.Carbs ?? 0,
+          fat: food.fat ?? food.Fat ?? 0,
+          qty: 1,
+        };
+
+        await fetch('http://localhost:5000/api/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload),
+        });
+      }
+
+      alert(`${selected.length} item(s) logged successfully!`);
+      window.location.href = '/log';
+    } catch (err) {
+      console.error(err);
+      alert('Failed to log selected items.');
+    }
+  }
+
   function clearSearch() {
     setUserSearch("");
     setResults([]);
     setError("");
     setSubmitted(false);
+    setSelectedIds(new Set());
   }
 
   function onKeyDown(event) {
@@ -121,15 +236,116 @@ export default function Search() {
     }
   }
 
+  // toggle save/unsave for a food item (foods only)
+  async function toggleSave(food) {
+    const id = food._id;
+    const wasSaved = savedIds.has(id);
+
+    // temporary local update
+    setSavedIds(prev => {
+      const next = new Set(prev);
+      if (wasSaved) next.delete(id); else next.add(id);
+      return next;
+    });
+
+    try {
+      if (wasSaved) {
+        const r = await fetch(`http://localhost:5000/api/saved/${id}`, {
+          method: 'DELETE',
+          headers: { 'x-user-id': localStorage.getItem('mp_user_id') || '' },
+          credentials: 'include'
+        });
+        if (!r.ok && r.status !== 204) throw new Error();
+      } else {
+        const r = await fetch('http://localhost:5000/api/saved', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': localStorage.getItem('mp_user_id') || ''
+          },
+          credentials: 'include',
+          body: JSON.stringify({ foodId: id })
+        });
+        if (!r.ok) throw new Error();
+      }
+    } catch {
+      // rollback on failure
+      setSavedIds(prev => {
+        const next = new Set(prev);
+        if (wasSaved) next.add(id); else next.delete(id);
+        return next;
+      });
+      alert(wasSaved ? "Couldn't remove from saved." : "Couldn't save item.");
+    }
+  }
+
+  // toggle save/unsave for a RECIPE item (recipes only)
+  async function toggleSaveRecipe(recipe) {
+    const id = recipe._id;
+    const wasSaved = savedRecipeIds.has(id);
+
+    // temporary local update
+    setSavedRecipeIds(prev => {
+      const next = new Set(prev);
+      if (wasSaved) next.delete(id); else next.add(id);
+      return next;
+    });
+
+    try {
+      if (wasSaved) {
+        const r = await fetch(`http://localhost:5000/api/saved/${id}?type=recipe`, {
+          method: 'DELETE',
+          headers: { 'x-user-id': localStorage.getItem('mp_user_id') || '' },
+          credentials: 'include'
+        });
+        if (!r.ok && r.status !== 204) throw new Error();
+      } else {
+        const r = await fetch('http://localhost:5000/api/saved', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': localStorage.getItem('mp_user_id') || ''
+          },
+          credentials: 'include',
+          body: JSON.stringify({ recipeId: id })
+        });
+        if (!r.ok) throw new Error();
+      }
+    } catch {
+      // rollback on failure
+      setSavedRecipeIds(prev => {
+        const next = new Set(prev);
+        if (wasSaved) next.add(id); else next.delete(id);
+        return next;
+      });
+      alert(wasSaved ? "Couldn't remove recipe from saved." : "Couldn't save recipe.");
+    }
+  }
+
+  const placeholder =
+    by === 'recipes' ? 'Search recipes…' : `Search by ${by}…`;
+
+  // normalize the SINGLE selected recipe into the shape expected by ModalRecipes
+  const recipesOnlyForModal = selectedRecipe
+    ? [{
+      ...selectedRecipe,
+      Name: selectedRecipe.Name ?? selectedRecipe.name ?? 'Unnamed',
+      Calories: selectedRecipe.Calories ?? selectedRecipe.calories ?? 0,
+      Protein: selectedRecipe.Protein ?? selectedRecipe.protein ?? 0,
+      Carbs: selectedRecipe.Carbs ?? selectedRecipe.carbs ?? 0,
+      Fat: selectedRecipe.Fat ?? selectedRecipe.fat ?? 0,
+    }]
+    : [];
+
   return (
-    <div style={{ maxWidth: 760, margin: '24px auto', padding: '0 16px' }}>
+    <div className="search-page" style={{ maxWidth: 760, margin: '24px auto', padding: '0 16px' }}>
       {/* slow rainbow title animation */}
       <style>{`
         @keyframes hueShift {
           0%   { filter: hue-rotate(0deg); }
           100% { filter: hue-rotate(360deg); }
         }
-        .hue-anim {
+        .search-page .hue-anim {
           animation: hueShift 16s linear infinite;
         }
       `}</style>
@@ -147,24 +363,26 @@ export default function Search() {
         >
           Food Finder
         </h1>
-        <p className="intro-subtitle">Find foods by name or tags and quickly preview macros</p>
+        <p className="intro-subtitle">
+          {by === 'recipes'
+            ? 'Search recipes by name and log total servings'
+            : 'Find food and quickly preview macros'}
+        </p>
         <div className="intro-divider" />
       </div>
 
       {/* search row */}
       <div className="search-row">
         <div className="search-group">
-          {/* text input */}
           <input
             value={userSearch}
             onChange={(event) => setUserSearch(event.target.value)}
             onKeyDown={onKeyDown}
-            placeholder={`Search by ${by}…`}
+            placeholder={placeholder}
             aria-label="Search text"
             className="search-input"
           />
 
-          {/* Name/Tags pill */}
           <div
             className={`search-select2${menuOpen ? ' open' : ''}`}
             tabIndex={0}
@@ -174,8 +392,25 @@ export default function Search() {
             onClick={() => setMenuOpen((isOpen) => !isOpen)}
             onBlur={() => setMenuOpen(false)}
           >
-            <span className="label">{by === 'name' ? 'Name' : 'Tags'}</span>
-            <ChevronDown size={18} className="chev" />
+            {/* stack label over chevron and force the icon NOT to float right */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>
+              <span className="label" style={{ marginBottom: 2 }}>
+                {by === 'name' ? 'Name' : by === 'tags' ? 'Tags' : 'Recipes'}
+              </span>
+              <ChevronDown
+                size={14}
+                className="chev"
+                aria-hidden="true"
+                style={{
+                  position: 'static',     // override any absolute positioning
+                  marginLeft: 0,          // override any auto push to the right
+                  marginTop: 2,
+                  display: 'block',
+                  alignSelf: 'center'
+                }}
+              />
+            </div>
+
             {menuOpen && (
               <ul className="search-menu" role="listbox">
                 <li
@@ -186,6 +421,7 @@ export default function Search() {
                   onClick={() => {
                     setBy('name');
                     setMenuOpen(false);
+                    setSelectedIds(new Set());
                   }}
                 >
                   Name
@@ -198,22 +434,33 @@ export default function Search() {
                   onClick={() => {
                     setBy('tags');
                     setMenuOpen(false);
+                    setSelectedIds(new Set());
                   }}
                 >
                   Tags
+                </li>
+                <li
+                  role="option"
+                  aria-selected={by === 'recipes'}
+                  className="search-item"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => {
+                    setBy('recipes');
+                    setMenuOpen(false);
+                    setSelectedIds(new Set());
+                  }}
+                >
+                  Recipes
                 </li>
               </ul>
             )}
           </div>
         </div>
 
-        {/* submits the users input */}
         <button onClick={() => runSearch(userSearch)} className="search-button">
           Search
         </button>
 
-        {/* clears the input and results */}
-        {/* only shows Clear if there's text or results */}
         {(userSearch.trim() || results.length > 0) && (
           <button
             type="button"
@@ -234,25 +481,122 @@ export default function Search() {
 
           <div style={{ display: 'grid', gap: 10 }}>
             {results.map((foodItem) => {
+              const isRecipe = foodItem.type === 'recipe';
               const disabled = loggingId === foodItem._id;
-              return (
-                <div key={foodItem._id} className="search-card">
-                  <div>
-                    <div className="search-name">{foodItem.name}</div>
-                    <div className="search-stats">
-                      Calories: {foodItem.calories ?? 0} | Protein: {foodItem.protein ?? 0}g | Fat {foodItem.fat ?? 0}g | Carbs: {foodItem.carbs ?? 0}g
-                    </div>
-                  </div>
+              const isSavedFood = savedIds.has(foodItem._id);
+              const isSavedRecipe = savedRecipeIds.has(foodItem._id);
+              const isSelected = selectedIds.has(foodItem._id);
 
+              const cardProps = isRecipe
+                ? { onClick: undefined, style: { cursor: 'default' } }
+                : { onClick: () => toggleSelect(foodItem._id), style: { cursor: 'pointer' } };
+
+              return (
+                <div
+                  key={foodItem._id}
+                  className={`search-card ${!isRecipe && isSelected ? 'selected' : ''}`}
+                  {...cardProps}
+                >
+                  {/* Save/star for foods and recipes */}
                   <button
                     type="button"
-                    onClick={() => logFood(foodItem)}
-                    aria-label={`Log ${foodItem.name}`}
-                    disabled={disabled}
-                    className="search-log-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isRecipe) toggleSaveRecipe(foodItem);
+                      else toggleSave(foodItem);
+                    }}
+                    aria-label={
+                      isRecipe
+                        ? (isSavedRecipe ? "Unsave recipe" : "Save recipe")
+                        : (isSavedFood ? "Unsave" : "Save")
+                    }
+                    style={{
+                      height: 30,
+                      width: 30,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "transparent",
+                      border: "none",
+                      borderRadius: 0,
+                      cursor: "pointer",
+                      outline: "none",
+                      transition: "transform 0.1s ease",
+                      marginRight: 8,
+                    }}
                   >
-                    {disabled ? 'Logging…' : 'Log'}
+                    <Star
+                      className={(isRecipe ? isSavedRecipe : isSavedFood) ? "star-twinkle" : ""}
+                      size={20}
+                      stroke={(isRecipe ? isSavedRecipe : isSavedFood) ? '#FFD700' : '#888'}
+                      fill={(isRecipe ? isSavedRecipe : isSavedFood) ? '#FFD700' : 'none'}
+                      strokeWidth={2}
+                      style={{ display: 'block', flexShrink: 0 }}
+                    />
                   </button>
+
+                  <div>
+                    <div className="search-name">
+                      {foodItem.name}
+                      {isRecipe && (
+                        <span
+                          className="pill"
+                          style={{
+                            marginLeft: 8,
+                            fontSize: 12,
+                            padding: '2px 8px',
+                            border: '1px solid #2a2a2a',
+                            borderRadius: 999
+                          }}
+                        >
+                          Recipe
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Foods show full macros; recipes show light meta if present */}
+                    {!isRecipe ? (
+                      <div className="search-stats">
+                        Calories: {foodItem.calories ?? 0} | Protein: {foodItem.protein ?? 0}g | Fat {foodItem.fat ?? 0}g | Carbs: {foodItem.carbs ?? 0}g
+                      </div>
+                    ) : (
+                      <div className="search-stats">
+                        {(foodItem.servings != null) && <>Servings: {foodItem.servings} </>}
+                        {(foodItem.calories != null) && <>| Calories: {foodItem.calories}</>}
+                        {Array.isArray(foodItem.tags) && foodItem.tags.length > 0 && (
+                          <> | {foodItem.tags.map(t => `#${t}`).join(' ')}</>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right-side button:
+                      - Foods: active Log button (existing behavior)
+                      - Recipes: open logging modal with servings */}
+                  {!isRecipe ? (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); logFood(foodItem); }}
+                      aria-label={`Log ${foodItem.name}`}
+                      disabled={disabled}
+                      className="search-log-btn"
+                    >
+                      {disabled ? 'Logging…' : 'Log'}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      aria-label={`Log ${foodItem.name}`}
+                      className="search-log-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedRecipe(foodItem);     // pick just this recipe
+                        setRecipeModalOpen(true);        // open modal
+                      }}
+                    >
+                      Log
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -264,7 +608,39 @@ export default function Search() {
         </>
       )}
 
-      {/* Button link on the lower left side for easy navigation to the Daily Log page */}
+      {/* Recipe logging modal (recipes view) */}
+      <ModalRecipes
+        open={recipeModalOpen}
+        setOpen={(isOpen) => {
+          setRecipeModalOpen(isOpen);
+          if (!isOpen) setSelectedRecipe(null);
+        }}
+        items={recipesOnlyForModal}
+        onLog={logRecipeFromModal}
+      />
+
+      {/* Log All Selected button (foods only) */}
+      {selectedIds.size > 0 && by !== 'recipes' && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 20,
+            right: 20,
+            background: "transparent",
+            zIndex: 1000
+          }}
+        >
+          <button
+            type="button"
+            onClick={logAllSelected}
+            className="pill-btn logall-btn"
+          >
+            Log All Selected
+          </button>
+        </div>
+      )}
+
+      {/* Nav buttons */}
       <div
         style={{
           position: "fixed",
