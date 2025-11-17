@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 
-export default function RecipePage() {
+export default function Recipe() {
     /* state for data and page chrome */
     const { id } = useParams();
     const [loading, setLoading] = useState(true);
