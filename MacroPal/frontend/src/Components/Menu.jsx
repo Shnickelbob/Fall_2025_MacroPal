@@ -14,9 +14,22 @@ const Menu = ({ open, setOpen }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open, setOpen]);
 
-  function Logout() {
+  async function handleLogout(e) {
+    e.preventDefault();
+
+    try {
+      await fetch("http://localhost:5000/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+
     localStorage.removeItem("mp_user_id");
     localStorage.removeItem("mp_screen_name");
+
+    window.location.href = "/";
   }
 
   return (
@@ -42,7 +55,7 @@ const Menu = ({ open, setOpen }) => {
         <a href="/homepage">Homepage</a>
         <a href="/search">Search</a>
         <a href="/log">Daily Log</a>
-        <a href="/" onClick={Logout}>Log out</a>
+        <a href="/" onClick={handleLogout}>Log out</a>
       </nav>
     </div>
   );

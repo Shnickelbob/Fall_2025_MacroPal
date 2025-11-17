@@ -131,6 +131,27 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+app.post("/api/logout", (req, res) => {
+  try {
+    if (!req.session) {
+      return res.json({ ok: true });
+    }
+
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Error in /api/logout:", err);
+        return res.status(500).json({ ok: false, error: "Logout failed" });
+      }
+
+      res.clearCookie("mp.sid");
+      return res.json({ ok: true });
+    });
+  } catch (err) {
+    console.error("Error in /api/logout:", err);
+    res.status(500).json({ ok: false, error: "Internal server error" });
+  }
+});
+
 // --- Routers
 // Public routes
 app.use("/api/search", searchRouter);
