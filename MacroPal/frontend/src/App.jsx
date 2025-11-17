@@ -10,6 +10,7 @@ import GoalValsTest from "./DemoPages/GoalValsTest.jsx";
 import DailyLog from "./pages/log.jsx";
 import Menu from "./Components/Menu";
 import ProtectedRoute from "./Components/ProtectedRoute.jsx";
+import Recipe from "./pages/recipe.jsx";
 import { useState } from "react";
 
 function App() {
