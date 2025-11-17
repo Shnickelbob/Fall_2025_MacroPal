@@ -16,6 +16,7 @@
 # For more information on GitHub Actions for Azure: https://github.com/Azure/Actions
 # For more information on the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # For more samples to get started with GitHub Action workflows to deploy to Azure: https://github.com/Azure/actions-workflow-samples
+# Deploys a Node.js backend (and built React frontend) to Azure Web App
 
 on:
   push:
@@ -23,12 +24,12 @@ on:
   workflow_dispatch:
 
 env:
-  APP_NAME: 'MacroPal'    # set this to your application's name
-  AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
-  NODE_VERSION: '20.x' # set this to the node version to use
+  APP_NAME: 'MacroPal'    # must match your Azure App Service name
+  AZURE_WEBAPP_PACKAGE_PATH: './backend'  # path to the backend that will be deployed
+  NODE_VERSION: '20.x'
   SECRET_CLIENT_ID: ${{ secrets.AZUREAPPSERVICE_CLIENTID_A797467515234D628A3AB5364B137640 }}
   SECRET_TENANT_ID: ${{ secrets.AZUREAPPSERVICE_TENANTID_5AE0269316C14C86948DF24F3D1EE2EC }}
-  SECRET_SUBSCRIPTION_ID: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F0868F1EA2F4435B8C36941B2D11F8F8  }}
+  SECRET_SUBSCRIPTION_ID: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F0868F1EA2F4435B8C36941B2D11F8F8 }}
 
 permissions:
   id-token: write
@@ -39,11 +40,10 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: 'Production'
-    defaults:
-      run:
-        working-directory: .
+
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
     - name: Set up Node.js
       uses: actions/setup-node@v4
@@ -51,21 +51,43 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
 
-    - name: npm install, build, and test
-      run: |
-        npm install
-        npm run build --if-present
-        npm run test --if-present
+    # ---------- FRONTEND BUILD ----------
+    - name: Install frontend dependencies
+      working-directory: ./frontend
+      run: npm install
 
+    - name: Build frontend
+      working-directory: ./frontend
+      run: npm run build
+
+    - name: Copy frontend build into backend
+      run: |
+        rm -rf backend/dist
+        cp -r frontend/dist backend/dist
+
+    # ---------- BACKEND BUILD / TEST ----------
+    - name: Install backend dependencies
+      working-directory: ./backend
+      run: npm install
+
+    - name: Build backend (optional)
+      working-directory: ./backend
+      run: npm run build --if-present
+
+    - name: Test backend (optional)
+      working-directory: ./backend
+      run: npm run test --if-present
+
+    # ---------- AZURE LOGIN ----------
     - name: Login to Azure
       uses: azure/login@v2
       with:
         client-id: ${{ env.SECRET_CLIENT_ID }}
         tenant-id: ${{ env.SECRET_TENANT_ID }}
         subscription-id: ${{ env.SECRET_SUBSCRIPTION_ID }}
-  
 
-    - name: 'Deploy to Azure WebApp'
+    # ---------- DEPLOY TO APP SERVICE ----------
+    - name: Deploy to Azure WebApp
       id: deploy-to-webapp
       uses: azure/webapps-deploy@v3
       with:
