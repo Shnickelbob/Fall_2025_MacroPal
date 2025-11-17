@@ -55,6 +55,11 @@ export default function ModalSavedFoods({
     }
   };
 
+  function openRecipe(recid) {
+    const id = recid;
+    window.location.href = "/recipe/"+id;
+  }
+
   const handleLogRecipe = async (recipe) => {
     if (!onLogRecipe || loggingKey) return;
 
@@ -142,7 +147,8 @@ export default function ModalSavedFoods({
           const value = servings[id] ?? 1;
 
           return (
-            <div key={id} className="search-card">
+            <div key={id} className="search-card"
+            onClick={() => openRecipe(id)}>
               <div>
                 <div className="search-name">{name}</div>
                 <div className="search-stats">
