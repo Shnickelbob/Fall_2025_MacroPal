@@ -10,7 +10,7 @@
  */
 
 import express from "express";
-import LogEntry from "../models/logEntry.js";
+import LogEntry from "../models/LogEntry.js";
 import User from "../models/user.js";
 import dateKey from "../utils/dateKey.js";
 

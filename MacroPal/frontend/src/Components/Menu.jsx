@@ -14,6 +14,11 @@ const Menu = ({ open, setOpen }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open, setOpen]);
 
+  function Logout() {
+    localStorage.removeItem("mp_user_id");
+    localStorage.removeItem("mp_screen_name");
+  }
+
   return (
     <div ref={menuRef}>
       <button
@@ -37,7 +42,7 @@ const Menu = ({ open, setOpen }) => {
         <a href="/homepage">Homepage</a>
         <a href="/search">Search</a>
         <a href="/log">Daily Log</a>
-        <a href="/">Log out</a>
+        <a href="/" onClick={Logout}>Log out</a>
       </nav>
     </div>
   );
