@@ -147,11 +147,12 @@ export default function ModalSavedFoods({
           const value = servings[id] ?? 1;
 
           return (
-            <div key={id} className="search-card"
-            onClick={() => openRecipe(id)}>
+            <div key={id} className="search-card">
               <div>
-                <div className="search-name">{name}</div>
-                <div className="search-stats">
+                <div className="search-name" onClick={() => openRecipe(id)}>
+                  {name}
+                </div>
+                <div className="search-stats" onClick={() => openRecipe(id)}>
                   Per serving — Calories: {r.Calories ?? r.calories ?? 0} |
                   {" "}Protein: {r.Protein ?? r.protein ?? 0}g | Fat{" "}
                   {r.Fat ?? r.fat ?? 0}g | Carbs: {r.Carbs ?? r.carbs ?? 0}g
