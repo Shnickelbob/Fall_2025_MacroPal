@@ -25,7 +25,7 @@ on:
 
 env:
   APP_NAME: 'MacroPal'    # must match your Azure App Service name
-  AZURE_WEBAPP_PACKAGE_PATH: './backend'  # path to the backend that will be deployed
+  AZURE_WEBAPP_PACKAGE_PATH: '.MacroPal//backend'  # path to the backend that will be deployed
   NODE_VERSION: '20.x'
   SECRET_CLIENT_ID: ${{ secrets.AZUREAPPSERVICE_CLIENTID_A797467515234D628A3AB5364B137640 }}
   SECRET_TENANT_ID: ${{ secrets.AZUREAPPSERVICE_TENANTID_5AE0269316C14C86948DF24F3D1EE2EC }}
