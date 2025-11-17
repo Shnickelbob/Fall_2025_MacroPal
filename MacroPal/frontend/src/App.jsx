@@ -71,6 +71,14 @@ function AppContent({ open, setOpen }) {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/recipe/:id"
+          element={
+            <ProtectedRoute>
+              <Recipe />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </>
   );
