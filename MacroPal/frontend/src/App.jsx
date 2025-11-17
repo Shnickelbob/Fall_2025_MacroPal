@@ -42,8 +42,8 @@ function AppContent({ open, setOpen }) {
         <Route path="/search" element={<Search />} />
         <Route path="/homepage" element={<HomePage />} />
         <Route path="/goaldemo" element={<GoalValsTest />} />
-        <Route path="/log" element={<DailyLog />} /> {/* merged route */}
         <Route path="/recipe/:id" element={<Recipe />} />
+        <Route path="/log" element={<DailyLog />} /> {/* merged route */}
       </Routes>
     </>
   );
