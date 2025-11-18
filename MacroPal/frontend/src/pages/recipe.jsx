@@ -5,7 +5,7 @@ import { Link, useParams } from "react-router-dom";
 
 export default function Recipe() {
     /* state for data and page chrome */
-    const { id } = useParams();
+    const { id }  = useParams();
     const [loading, setLoading] = useState(true);
     const [recipe, setRecipe] = useState({}); // recipes from backend
     const [screenName, setScreenName] = useState("User");

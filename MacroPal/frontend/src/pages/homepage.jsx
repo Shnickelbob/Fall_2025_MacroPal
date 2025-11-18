@@ -33,9 +33,9 @@ const [savedRecipes, setSavedRecipes] = useState([]);
 const [loadingSaved, setLoadingSaved] = useState(false);
 
 // recipes modal state
-const [showRecipes, setShowRecipes] = useState(false);
-const [recipes, setRecipes] = useState([]);
-const [loadingRecipes, setLoadingRecipes] = useState(false);
+// const [showRecipes, setShowRecipes] = useState(false);
+// const [recipes, setRecipes] = useState([]);
+// const [loadingRecipes, setLoadingRecipes] = useState(false);
 
 
 
@@ -53,21 +53,21 @@ const [loadingRecipes, setLoadingRecipes] = useState(false);
   const [err, setErr] = useState("");
 
 //Recipes fetch
-  useEffect(() => {
-    if (!showRecipes) return;
-    (async () => {
-      setLoadingRecipes(true);
-      try {
-        const r = await fetch("http://localhost:5000/api/recipes", { credentials: "include" });
-        const body = await r.json().catch(() => ({}));
-        setRecipes(body.recipes || []);
-      } catch {
-        setRecipes([]);
-      } finally {
-        setLoadingRecipes(false);
-      }
-    })();
-  }, [showRecipes]);
+  // useEffect(() => {
+  //   if (!showRecipes) return;
+  //   (async () => {
+  //     setLoadingRecipes(true);
+  //     try {
+  //       const r = await fetch("http://localhost:5000/api/recipes", { credentials: "include" });
+  //       const body = await r.json().catch(() => ({}));
+  //       setRecipes(body.recipes || []);
+  //     } catch {
+  //       setRecipes([]);
+  //     } finally {
+  //       setLoadingRecipes(false);
+  //     }
+  //   })();
+  // }, [showRecipes]);
 
   // load + refresh on visibility
   useEffect(() => {
@@ -221,10 +221,10 @@ const [loadingRecipes, setLoadingRecipes] = useState(false);
     window.location.href = "/log";
   }
 
-  async function logSavedRecipe(recipe) {
-    const payload = { recipeId: recipe._id };
-    await logRecipe(payload);
-  }
+  // async function logSavedRecipe(recipe) {
+  //   const payload = { recipeId: recipe._id };
+  //   await logRecipe(payload);
+  // }
 
   // Add food demo submit
   const handleSubmit = async (data) => {
@@ -349,7 +349,7 @@ const [loadingRecipes, setLoadingRecipes] = useState(false);
       <button
         title="Search for food items"
         className="mp-btn-homepage"
-        style={{ position: "absolute", bottom: 20, right: 170 }}
+        style={{ position: "absolute", bottom: 20, right: 120 }}
         onClick={() => (window.location.href = "/search")}
       >
         <FaMagnifyingGlass />
@@ -359,7 +359,7 @@ const [loadingRecipes, setLoadingRecipes] = useState(false);
       <button
         title="View saved foods"
         className="mp-btn-homepage"
-        style={{ position: "absolute", bottom: 20, right: 120 }}
+        style={{ position: "absolute", bottom: 20, right: 70 }}
         onClick={() => setShowSavedFoods(true)}
       >
         <FaStar />
@@ -370,19 +370,19 @@ const [loadingRecipes, setLoadingRecipes] = useState(false);
         to="/log"
         title="View daily log"
         className="mp-btn-homepage"
-        style={{ position: "absolute", bottom: 20, right: 70 }}
+        style={{ position: "absolute", bottom: 20, right: 20 }}
       >
         <FaList />
       </Link>
 
-      <button
+      {/* <button
         title="Log a recipe"
         className="mp-btn-homepage"
         style={{ position: "absolute", bottom: 20, right: 20 }}
         onClick={() => setShowRecipes(true)}
       >
         <GiMeal />
-      </button>
+      </button> */}
 
 
       {/* Errors */}
@@ -421,14 +421,14 @@ const [loadingRecipes, setLoadingRecipes] = useState(false);
           onSubmit={handleRecipeSubmit}
         />
       )}
-      {showRecipes && (
+      {/* {showRecipes && (
         <ModalRecipes
           open={showRecipes}
           setOpen={setShowRecipes}
           items={loadingRecipes ? [] : recipes}
           onLog={logRecipe}
         />
-      )}
+      )} */}
     </div>
   );
 }

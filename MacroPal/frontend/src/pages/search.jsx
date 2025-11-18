@@ -236,6 +236,12 @@ export default function Search() {
     }
   }
 
+  // Visit a recipe page on click
+  function openRecipe(recipe) {
+    const id = recipe._id;
+    window.location.href = "/recipe/"+id;
+  }
+
   // toggle save/unsave for a food item (foods only)
   async function toggleSave(food) {
     const id = food._id;
@@ -488,7 +494,7 @@ export default function Search() {
               const isSelected = selectedIds.has(foodItem._id);
 
               const cardProps = isRecipe
-                ? { onClick: undefined, style: { cursor: 'default' } }
+                ? { onClick: () => openRecipe(foodItem), style: { cursor: 'pointer' } }
                 : { onClick: () => toggleSelect(foodItem._id), style: { cursor: 'pointer' } };
 
               return (

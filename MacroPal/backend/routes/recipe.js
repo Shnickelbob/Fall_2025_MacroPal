@@ -18,7 +18,7 @@ router.get("/", async (req, res) => {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ error: "Not logged in" });
 
-   const recipes = await Recipe.find().populate("Ingredients_Ids").lean();
+   const recipes = await Recipe.find().lean();
 
     res.json({ recipes });
   } catch (e) {
@@ -30,10 +30,10 @@ router.get("/", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
-    const userId = getUserId(req);
-    if (!userId) return res.status(401).json({ error: "Not logged in" });
-
-   const recipe = await Recipe.findById(req.params.id).populate("Ingredients_Ids").lean();
+    // const userId = getUserId(req);
+    // if (!userId) return res.status(401).json({ error: "Not logged in" });
+    // populate("Ingredients_Ids").
+   const recipe = await Recipe.findById(req.params.id).lean();
     if (!recipe) {
       return res.status(404).json({ error: "Recipe not found" });
     }
