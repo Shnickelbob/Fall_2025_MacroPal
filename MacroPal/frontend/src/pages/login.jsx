@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../App.css";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 /** ------- Register Modal (uses same pattern as ModalAddFood) ------- */
 function RegisterModal({ open, setOpen, onRegistered }) {
   const [regUsername, setRegUsername] = useState("");
@@ -11,7 +13,7 @@ function RegisterModal({ open, setOpen, onRegistered }) {
 
   const backdropMouseDownOnOverlay = useRef(false);
 
-  const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  
 
   useEffect(() => {
     if (!open) return;

@@ -25,6 +25,7 @@ import { useEffect, useState } from "react";
 import "./log.css";
 import { Link } from "react-router-dom";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 /*
   top level component
@@ -40,7 +41,6 @@ export default function DailyLog() {
     const [screenName, setScreenName] = useState("User");
     const [error, setError] = useState("");
 
-    const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
     /*
       initial load
       grabs today's log using the new route and normalizes numbers to be safe

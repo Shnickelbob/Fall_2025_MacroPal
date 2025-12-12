@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { Link, useParams } from "react-router-dom";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function Recipe() {
     /* state for data and page chrome */
@@ -11,7 +12,7 @@ export default function Recipe() {
     const [screenName, setScreenName] = useState("User");
     const [error, setError] = useState("");
 
-    const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    
   
     useEffect(() => {
         (async () => {

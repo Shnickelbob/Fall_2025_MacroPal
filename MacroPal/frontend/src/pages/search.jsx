@@ -19,6 +19,8 @@ import './search.css';
 import { Link } from "react-router-dom";
 import ModalRecipes from '../Components/ModalRecipes.jsx';
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 export default function Search() {
   // core search state
   const [userSearch, setUserSearch] = useState('');
@@ -50,8 +52,6 @@ export default function Search() {
   // recipe logging modal
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
-
-  const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   // load saved foods once
   useEffect(() => {

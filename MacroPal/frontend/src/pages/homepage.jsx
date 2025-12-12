@@ -20,6 +20,8 @@ import { patchGoals /* getGoals */ } from "../api/user";
 import ModalSavedFoods from "../Components/ModalSavedFoods";
 import ModalRecipes from "../Components/ModalRecipes";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 function HomePage() {
   // modals
   const [showAddFood, setShowAddFood] = useState(false);
@@ -37,7 +39,6 @@ const [loadingSaved, setLoadingSaved] = useState(false);
 // const [recipes, setRecipes] = useState([]);
 // const [loadingRecipes, setLoadingRecipes] = useState(false);
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   // header name
   const [screenName, setScreenName] = useState("User");
