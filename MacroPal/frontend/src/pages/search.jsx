@@ -51,11 +51,13 @@ export default function Search() {
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
 
+  const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
   // load saved foods once
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/saved', {
+        const res = await fetch(`${API}/api/saved`, {
           headers: { 'x-user-id': localStorage.getItem('mp_user_id') || '' },
           credentials: 'include',
         });
@@ -101,7 +103,7 @@ export default function Search() {
       const byParam = by === 'recipes' ? 'name' : by;
 
       const params = new URLSearchParams({ userSearch: trimmedSearch, by: byParam, type });
-      const response = await fetch(`http://localhost:5000/api/search?${params.toString()}`);
+      const response = await fetch(`${API}/api/search?${params.toString()}`);
       if (!response.ok) throw new Error('Network error');
 
       const data = await response.json();
@@ -130,7 +132,7 @@ export default function Search() {
         qty: 1,
       };
 
-      const res = await fetch('http://localhost:5000/api/log', {
+      const res = await fetch(`${API}/api/log`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -154,7 +156,7 @@ export default function Search() {
   // log a RECIPE coming from the ModalRecipes component
   async function logRecipeFromModal(payload) {
     try {
-      const res = await fetch('http://localhost:5000/api/log', {
+      const res = await fetch(`${API}/api/log`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -202,7 +204,7 @@ export default function Search() {
           qty: 1,
         };
 
-        await fetch('http://localhost:5000/api/log', {
+        await fetch(`${API}/api/log`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -256,14 +258,14 @@ export default function Search() {
 
     try {
       if (wasSaved) {
-        const r = await fetch(`http://localhost:5000/api/saved/${id}`, {
+        const r = await fetch(`${API}/api/saved/${id}`, {
           method: 'DELETE',
           headers: { 'x-user-id': localStorage.getItem('mp_user_id') || '' },
           credentials: 'include'
         });
         if (!r.ok && r.status !== 204) throw new Error();
       } else {
-        const r = await fetch('http://localhost:5000/api/saved', {
+        const r = await fetch(`${API}/api/saved`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -299,14 +301,14 @@ export default function Search() {
 
     try {
       if (wasSaved) {
-        const r = await fetch(`http://localhost:5000/api/saved/${id}?type=recipe`, {
+        const r = await fetch(`${API}/api/saved/${id}?type=recipe`, {
           method: 'DELETE',
           headers: { 'x-user-id': localStorage.getItem('mp_user_id') || '' },
           credentials: 'include'
         });
         if (!r.ok && r.status !== 204) throw new Error();
       } else {
-        const r = await fetch('http://localhost:5000/api/saved', {
+        const r = await fetch(`${API}/api/saved`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

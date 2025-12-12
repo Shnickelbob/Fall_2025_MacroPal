@@ -11,13 +11,14 @@ export default function Recipe() {
     const [screenName, setScreenName] = useState("User");
     const [error, setError] = useState("");
 
+    const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
   
     useEffect(() => {
         (async () => {
             try {
                 setError("");
                 
-                const url = id ? `http://localhost:5000/api/recipe/${id}` : "http://localhost:5000/api/recipe";
+                const url = id ? `${API}/api/recipe/${id}` : `${API}/api/recipe`;
                 
                 const res = await fetch(url, {
                     headers: {

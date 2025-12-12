@@ -37,7 +37,7 @@ const [loadingSaved, setLoadingSaved] = useState(false);
 // const [recipes, setRecipes] = useState([]);
 // const [loadingRecipes, setLoadingRecipes] = useState(false);
 
-
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   // header name
   const [screenName, setScreenName] = useState("User");
@@ -122,7 +122,7 @@ const [loadingSaved, setLoadingSaved] = useState(false);
     (async () => {
       setLoadingSaved(true);
       try {
-        const res = await fetch("http://localhost:5000/api/saved", {
+        const res = await fetch(`${API}/api/saved`, {
           headers: { "x-user-id": localStorage.getItem("mp_user_id") || "" },
           credentials: "include",
         });
@@ -167,7 +167,7 @@ const [loadingSaved, setLoadingSaved] = useState(false);
       qty: 1,
     };
 
-    const res = await fetch("http://localhost:5000/api/log", {
+    const res = await fetch(`${API}/api/log`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -208,7 +208,7 @@ const [loadingSaved, setLoadingSaved] = useState(false);
   };
 
   async function logRecipe(payload) {
-    const res = await fetch("http://localhost:5000/api/log", {
+    const res = await fetch(`${API}/api/log`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",

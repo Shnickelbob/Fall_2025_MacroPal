@@ -40,6 +40,7 @@ export default function DailyLog() {
     const [screenName, setScreenName] = useState("User");
     const [error, setError] = useState("");
 
+    const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
     /*
       initial load
       grabs today's log using the new route and normalizes numbers to be safe
@@ -53,7 +54,7 @@ export default function DailyLog() {
             try {
                 setError("");
 
-                const res = await fetch("http://localhost:5000/api/log/today", {
+                const res = await fetch(`%{API}/api/log/today`, {
                     headers: { "x-user-id": localStorage.getItem("mp_user_id") || "" },
                     credentials: "include",
                 });
@@ -124,7 +125,7 @@ export default function DailyLog() {
         });
 
         try {
-            const res = await fetch(`http://localhost:5000/api/log/${entryId}`, {
+            const res = await fetch(`${API}/api/log/${entryId}`, {
                 method: "DELETE",
                 headers: { "x-user-id": localStorage.getItem("mp_user_id") || "" },
                 credentials: "include",
@@ -161,7 +162,7 @@ export default function DailyLog() {
         const failures = [];
         for (const id of idsToRemove) {
             try {
-                const res = await fetch(`http://localhost:5000/api/log/${id}`, {
+                const res = await fetch(`${API}/api/log/${id}`, {
                     method: "DELETE",
                     headers: { "x-user-id": localStorage.getItem("mp_user_id") || "" },
                     credentials: "include",

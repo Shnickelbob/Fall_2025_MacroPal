@@ -11,6 +11,8 @@ function RegisterModal({ open, setOpen, onRegistered }) {
 
   const backdropMouseDownOnOverlay = useRef(false);
 
+  const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
   useEffect(() => {
     if (!open) return;
     const handleKey = (e) => e.key === "Escape" && setOpen(false);
@@ -28,7 +30,7 @@ function RegisterModal({ open, setOpen, onRegistered }) {
     if (regPassword !== regConfirm) return setError("Passwords do not match.");
 
     try {
-      const response = await fetch("http://localhost:5000/api/register", {
+      const response = await fetch(`${API}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: u, password: regPassword }),
@@ -125,7 +127,7 @@ function Login() {
 
   const verifyLogin = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/login", {
+      const response = await fetch(`${API}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include", // send/receive cookie for express-session
